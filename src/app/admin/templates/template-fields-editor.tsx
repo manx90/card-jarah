@@ -1,6 +1,13 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -38,7 +45,7 @@ import type {
   TemplateFieldSelect,
   TemplateFieldText,
 } from "@/types/template-fields";
-import { GripVertical, Plus, Trash2 } from "lucide-react";
+import { GripVertical, Maximize2, Plus, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   scaleFontSizeToContainer,
@@ -66,6 +73,7 @@ export function TemplateFieldsEditor({
     parseTemplateFieldsConfig(defaultFieldsJson).groups,
   );
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [previewLightboxOpen, setPreviewLightboxOpen] = useState(false);
   const captureRef = useRef<HTMLDivElement>(null);
 
   const previewUrl = useMemo(() => {
@@ -224,7 +232,8 @@ export function TemplateFieldsEditor({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(260px,44%)] lg:items-start lg:gap-6">
+      <div className="order-2 min-w-0 space-y-4 lg:order-1">
       <input type="hidden" name="fieldsJson" value={fieldsJsonValue} readOnly />
 
       <div className="flex flex-wrap items-center gap-2">
@@ -287,132 +296,6 @@ export function TemplateFieldsEditor({
               </li>
             ))}
           </ul>
-        </div>
-      )}
-
-      {!previewFile || !previewUrl ? (
-        <div className="bg-muted/50 text-muted-foreground rounded-xl border border-dashed p-8 text-center text-sm">
-          اختر ملف «صورة المعاينة» أعلاه لعرض الصورة ووضع الحقول.
-        </div>
-      ) : (
-        <div className="relative mx-auto w-full max-w-full overflow-hidden rounded-xl border bg-card shadow-sm">
-          <div
-            ref={captureRef}
-            className="relative w-full touch-none"
-            style={{ backgroundColor: "#f4f4f5" }}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={previewUrl}
-              alt=""
-              className="block h-auto w-full max-w-full object-contain"
-              draggable={false}
-            />
-            {fields.map((f) => {
-              const isSel = selectedId === f.id;
-              if (f.type === "link") {
-                const w = `${Math.min(0.5, f.qrSize ?? 0.14) * 100}%`;
-                return (
-                  <div
-                    key={f.id}
-                    role="button"
-                    tabIndex={0}
-                    className={`absolute flex touch-none items-center justify-center border-2 border-dashed bg-white/80 px-1 ${
-                      isSel ? "z-10 border-primary" : "z-1 border-zinc-400"
-                    } cursor-grab active:cursor-grabbing`}
-                    style={{
-                      left: `${f.x * 100}%`,
-                      top: `${f.y * 100}%`,
-                      transform: "translate(-50%, -50%)",
-                      width: w,
-                      aspectRatio: "1",
-                    }}
-                    onPointerDown={(e) => beginDrag(e, f.id)}
-                    onClick={() => setSelectedId(f.id)}
-                  >
-                    <span className="text-muted-foreground text-[10px] font-medium">QR</span>
-                    <GripVertical className="absolute end-0 top-1/2 size-4 -translate-y-1/2 opacity-50" />
-                  </div>
-                );
-              }
-              if (f.type === "image") {
-                return (
-                  <div
-                    key={f.id}
-                    role="button"
-                    tabIndex={0}
-                    className={`absolute flex touch-none items-center justify-center overflow-hidden rounded border-2 bg-white/40 ${
-                      isSel ? "z-10 border-primary" : "z-1 border-zinc-400"
-                    } cursor-grab active:cursor-grabbing`}
-                    style={{
-                      left: `${f.x * 100}%`,
-                      top: `${f.y * 100}%`,
-                      transform: "translate(-50%, -50%)",
-                      width: `${f.width * 100}%`,
-                      height: `${f.height * 100}%`,
-                    }}
-                    onPointerDown={(e) => beginDrag(e, f.id)}
-                    onClick={() => setSelectedId(f.id)}
-                  >
-                    <span className="text-muted-foreground text-xs">{f.label}</span>
-                  </div>
-                );
-              }
-              const anchor = f.anchor ?? "center";
-              const justify =
-                anchor === "start"
-                  ? "flex-start"
-                  : anchor === "end"
-                    ? "flex-end"
-                    : "center";
-              return (
-                <div
-                  key={f.id}
-                  role="button"
-                  tabIndex={0}
-                  className={`absolute flex touch-none px-2 ${
-                    isSel ? "z-10" : "z-1"
-                  } cursor-grab active:cursor-grabbing`}
-                  style={{
-                    left: `${f.x * 100}%`,
-                    top: `${f.y * 100}%`,
-                    transform: "translate(-50%, -50%)",
-                    width: "88%",
-                    justifyContent: justify,
-                  }}
-                  onPointerDown={(e) => beginDrag(e, f.id)}
-                  onClick={() => setSelectedId(f.id)}
-                >
-                  <span
-                    className="flex max-w-full items-center gap-1 rounded px-1.5 py-0.5"
-                    style={{
-                      fontFamily: fontFamilyForKey(f.fontKey),
-                      fontSize: scaleFontSizeToContainer(
-                        f.fontSize ?? 24,
-                        previewContainerWidth,
-                      ),
-                      fontWeight: normalizeFontWeight(f.fontWeight),
-                      fontStyle: f.fontStyle === "italic" ? "italic" : "normal",
-                      textDecoration:
-                        f.textDecoration === "underline" ? "underline" : "none",
-                      color: f.color ?? "#1a1a1a",
-                      backgroundColor: "transparent",
-                      textAlign:
-                        anchor === "center"
-                          ? "center"
-                          : anchor === "end"
-                            ? "left"
-                            : "right",
-                      wordBreak: "break-word",
-                    }}
-                  >
-                    <GripVertical className="size-4 shrink-0 opacity-60" aria-hidden />
-                    {previewLabel(f)}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
         </div>
       )}
 
@@ -729,6 +612,180 @@ export function TemplateFieldsEditor({
           </div>
         </div>
       )}
+      </div>
+
+      <div className="order-1 sticky top-14 z-10 self-start bg-background/95 pb-2 backdrop-blur-sm lg:top-16 lg:order-2">
+        {!previewFile || !previewUrl ? (
+          <div className="bg-muted/50 text-muted-foreground rounded-xl border border-dashed p-6 text-center text-sm lg:min-h-[200px] lg:p-8">
+            اختر ملف «صورة القالب» في النموذج لعرض الصورة ووضع الحقول.
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                className="gap-1 shadow-sm"
+                onClick={() => setPreviewLightboxOpen(true)}
+              >
+                <Maximize2 className="size-3.5 opacity-90" aria-hidden />
+                عرض بحجم كبير
+              </Button>
+              <p className="text-muted-foreground max-w-[min(100%,14rem)] text-end text-[10px] leading-tight sm:max-w-none sm:text-xs">
+                أو اضغط على أجزاء الصورة الظاهرة (خارج الحقول)
+              </p>
+            </div>
+            <div className="max-h-[min(42vh,22rem)] overflow-auto rounded-xl border bg-card shadow-sm lg:max-h-[calc(100dvh-5.5rem)]">
+            <div className="relative mx-auto w-full min-w-0 max-w-full">
+              <div
+                ref={captureRef}
+                className="relative w-full touch-none"
+                style={{ backgroundColor: "#f4f4f5" }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={previewUrl}
+                  alt=""
+                  className="mx-auto block h-auto max-h-[min(38vh,20rem)] w-full max-w-full cursor-zoom-in object-contain lg:max-h-[min(72dvh,40rem)]"
+                  draggable={false}
+                  onClick={() => setPreviewLightboxOpen(true)}
+                />
+                {fields.map((f) => {
+                  const isSel = selectedId === f.id;
+                  if (f.type === "link") {
+                    const w = `${Math.min(0.5, f.qrSize ?? 0.14) * 100}%`;
+                    return (
+                      <div
+                        key={f.id}
+                        role="button"
+                        tabIndex={0}
+                        className={`absolute flex touch-none items-center justify-center border-2 border-dashed bg-white/80 px-1 ${
+                          isSel ? "z-10 border-primary" : "z-1 border-zinc-400"
+                        } cursor-grab active:cursor-grabbing`}
+                        style={{
+                          left: `${f.x * 100}%`,
+                          top: `${f.y * 100}%`,
+                          transform: "translate(-50%, -50%)",
+                          width: w,
+                          aspectRatio: "1",
+                        }}
+                        onPointerDown={(e) => beginDrag(e, f.id)}
+                        onClick={() => setSelectedId(f.id)}
+                      >
+                        <span className="text-muted-foreground text-[10px] font-medium">QR</span>
+                        <GripVertical className="absolute end-0 top-1/2 size-4 -translate-y-1/2 opacity-50" />
+                      </div>
+                    );
+                  }
+                  if (f.type === "image") {
+                    return (
+                      <div
+                        key={f.id}
+                        role="button"
+                        tabIndex={0}
+                        className={`absolute flex touch-none items-center justify-center overflow-hidden rounded border-2 bg-white/40 ${
+                          isSel ? "z-10 border-primary" : "z-1 border-zinc-400"
+                        } cursor-grab active:cursor-grabbing`}
+                        style={{
+                          left: `${f.x * 100}%`,
+                          top: `${f.y * 100}%`,
+                          transform: "translate(-50%, -50%)",
+                          width: `${f.width * 100}%`,
+                          height: `${f.height * 100}%`,
+                        }}
+                        onPointerDown={(e) => beginDrag(e, f.id)}
+                        onClick={() => setSelectedId(f.id)}
+                      >
+                        <span className="text-muted-foreground text-xs">{f.label}</span>
+                      </div>
+                    );
+                  }
+                  const anchor = f.anchor ?? "center";
+                  const justify =
+                    anchor === "start"
+                      ? "flex-start"
+                      : anchor === "end"
+                        ? "flex-end"
+                        : "center";
+                  return (
+                    <div
+                      key={f.id}
+                      role="button"
+                      tabIndex={0}
+                      className={`absolute flex touch-none px-2 ${
+                        isSel ? "z-10" : "z-1"
+                      } cursor-grab active:cursor-grabbing`}
+                      style={{
+                        left: `${f.x * 100}%`,
+                        top: `${f.y * 100}%`,
+                        transform: "translate(-50%, -50%)",
+                        width: "88%",
+                        justifyContent: justify,
+                      }}
+                      onPointerDown={(e) => beginDrag(e, f.id)}
+                      onClick={() => setSelectedId(f.id)}
+                    >
+                      <span
+                        className="flex max-w-full items-center gap-1 rounded px-1.5 py-0.5"
+                        style={{
+                          fontFamily: fontFamilyForKey(f.fontKey),
+                          fontSize: scaleFontSizeToContainer(
+                            f.fontSize ?? 24,
+                            previewContainerWidth,
+                          ),
+                          fontWeight: normalizeFontWeight(f.fontWeight),
+                          fontStyle: f.fontStyle === "italic" ? "italic" : "normal",
+                          textDecoration:
+                            f.textDecoration === "underline" ? "underline" : "none",
+                          color: f.color ?? "#1a1a1a",
+                          backgroundColor: "transparent",
+                          textAlign:
+                            anchor === "center"
+                              ? "center"
+                              : anchor === "end"
+                                ? "left"
+                                : "right",
+                          wordBreak: "break-word",
+                        }}
+                      >
+                        <GripVertical className="size-4 shrink-0 opacity-60" aria-hidden />
+                        {previewLabel(f)}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <Dialog open={previewLightboxOpen} onOpenChange={setPreviewLightboxOpen}>
+        <DialogContent
+          className="max-h-[92vh] max-w-[min(96vw,72rem)] gap-3 overflow-hidden p-3 sm:p-4"
+          showCloseButton
+        >
+          <DialogHeader className="text-start">
+            <DialogTitle className="text-start">معاينة الصورة بحجم كبير</DialogTitle>
+            <DialogDescription className="sr-only">
+              للتحقق من تفاصيل الصورة قبل ضبط الحقول
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex max-h-[calc(92vh-5rem)] min-h-0 justify-center overflow-auto rounded-lg bg-muted/40 p-2">
+            {previewUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={previewUrl}
+                alt=""
+                className="h-auto max-h-[calc(92vh-5.5rem)] w-full max-w-full object-contain"
+                draggable={false}
+              />
+            ) : null}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

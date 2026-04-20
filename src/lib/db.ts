@@ -66,7 +66,7 @@ function logDbConnectionFailed(message: string) {
 }
 
 async function seedCategoriesIfEmpty(ds: DataSource): Promise<void> {
-  const repo = ds.getRepository(Category);
+  const repo = ds.getRepository("categories") as Repository<Category>;
   const count = await repo.count();
   if (count > 0) return;
   await repo.insert(DEFAULT_CATEGORIES);
@@ -78,7 +78,7 @@ async function seedBootstrapAdminIfNeeded(ds: DataSource): Promise<void> {
   const password =
     process.env.BOOTSTRAP_ADMIN_PASSWORD?.trim() || DEFAULT_ADMIN_PASSWORD;
 
-  const repo = ds.getRepository(User);
+  const repo = ds.getRepository("users") as Repository<User>;
   const existing = await repo.findOne({ where: { email } });
 
   if (existing) {
@@ -148,18 +148,19 @@ export async function getDataSource(): Promise<DataSource> {
   return ds;
 }
 
+/** أسماء الجداول — البحث بالصنف يفشل لأن الاسم يُصغَّر (User→h) في بناء الإنتاج */
 export async function getCategoryRepository(): Promise<Repository<Category>> {
-  return (await getDataSource()).getRepository(Category);
+  return (await getDataSource()).getRepository("categories") as Repository<Category>;
 }
 
 export async function getTemplateRepository(): Promise<Repository<Template>> {
-  return (await getDataSource()).getRepository(Template);
+  return (await getDataSource()).getRepository("templates") as Repository<Template>;
 }
 
 export async function getPurchaseRepository(): Promise<Repository<Purchase>> {
-  return (await getDataSource()).getRepository(Purchase);
+  return (await getDataSource()).getRepository("purchases") as Repository<Purchase>;
 }
 
 export async function getUserRepository(): Promise<Repository<User>> {
-  return (await getDataSource()).getRepository(User);
+  return (await getDataSource()).getRepository("users") as Repository<User>;
 }

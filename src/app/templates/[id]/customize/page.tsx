@@ -53,7 +53,8 @@ export default async function CustomizePage({
         تخصيص: {template.title}
       </h1>
       <p className="text-muted-foreground mb-8 text-sm">
-        عدّل الحقول ثم صدّر صورة PNG بعد شراء القالب.
+        عدّل محتوى الحقول فقط (النص، القائمة، الرابط، الصورة). الخط والتنسيق من
+        إعداد القالب. صدّر PNG بعد الشراء.
       </p>
       <CardCustomizer
         templateId={template.id}
