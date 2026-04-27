@@ -82,17 +82,18 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         dir="rtl"
       >
         <header
-          className="border-border/60 flex h-14 shrink-0 items-center gap-2 border-b bg-background/90 px-4 backdrop-blur sm:h-16 sm:px-6"
+          className="border-border/60 sticky top-14 z-30 flex h-14 shrink-0 items-center gap-2 border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/85 sm:top-16 sm:h-16 sm:px-6"
         >
           <SidebarTrigger className="text-muted-foreground" />
           <span className="text-muted-foreground text-sm">لوحة الإدارة</span>
         </header>
         <div className="relative flex-1 p-4 sm:p-6">
-          <div className="relative z-0 mx-auto max-w-6xl overflow-hidden rounded-2xl border border-border/50 shadow-sm">
-            <div className="pointer-events-none absolute inset-0">
+          {/* لا تضع overflow-hidden هنا: يكسر position: sticky لمعاينة القالب */}
+          <div className="relative z-0 mx-auto max-w-6xl rounded-2xl border border-border/50 shadow-sm">
+            <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">
               <BorderBeam />
             </div>
-            <div className="relative m-[1px] min-h-[12rem] rounded-[calc(var(--radius-2xl)-1px)] bg-card p-4 sm:p-6">
+            <div className="relative m-px min-h-[12rem] overflow-visible rounded-[calc(1.125rem-1px)] bg-card p-4 sm:p-6">
               {children}
             </div>
           </div>

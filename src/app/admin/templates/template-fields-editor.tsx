@@ -52,6 +52,7 @@ import {
   useCardPreviewContainerWidth,
 } from "@/lib/card-preview-font-scale";
 import { ensureGoogleFontLoaded } from "@/lib/load-google-font";
+import { randomUuid } from "@/lib/random-uuid";
 
 function clamp01(n: number): number {
   return Math.min(0.98, Math.max(0.02, n));
@@ -121,7 +122,7 @@ export function TemplateFieldsEditor({
   }, []);
 
   function addField(kind: FieldKind) {
-    const id = crypto.randomUUID();
+    const id = randomUuid();
     const base = {
       id,
       x: 0.5,
@@ -179,7 +180,7 @@ export function TemplateFieldsEditor({
   }
 
   function addGroup() {
-    const id = crypto.randomUUID();
+    const id = randomUuid();
     setGroups((prev) => [...prev, { id, title: `قسم ${prev.length + 1}` }]);
   }
 
@@ -239,8 +240,8 @@ export function TemplateFieldsEditor({
   }
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(260px,44%)] lg:items-start lg:gap-6">
-      <div className="order-2 min-w-0 space-y-4 lg:order-1">
+    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(280px,42%)] lg:items-start lg:gap-6 lg:pt-0">
+      <div className="order-2 min-h-0 min-w-0 space-y-4 lg:order-1">
       <input type="hidden" name="fieldsJson" value={fieldsJsonValue} readOnly />
 
       <div className="flex flex-wrap items-center gap-2">
@@ -621,7 +622,7 @@ export function TemplateFieldsEditor({
       )}
       </div>
 
-      <div className="order-1 sticky top-14 z-10 self-start bg-background/95 pb-2 backdrop-blur-sm lg:top-16 lg:order-2">
+      <div className="order-1 sticky top-28 z-20 self-start max-w-full bg-background/95 pb-2 backdrop-blur-sm sm:top-32 lg:order-2 lg:max-h-[min(calc(100dvh-8.5rem),900px)]">
         {!previewUrl ? (
           <div className="bg-muted/50 text-muted-foreground rounded-xl border border-dashed p-6 text-center text-sm lg:min-h-[200px] lg:p-8">
             اختر ملف «صورة القالب» في النموذج لعرض الصورة ووضع الحقول.
@@ -643,7 +644,7 @@ export function TemplateFieldsEditor({
                 أو اضغط على أجزاء الصورة الظاهرة (خارج الحقول)
               </p>
             </div>
-            <div className="max-h-[min(42vh,22rem)] overflow-auto rounded-xl border bg-card shadow-sm lg:max-h-[calc(100dvh-5.5rem)]">
+            <div className="max-h-[min(42vh,22rem)] overflow-auto rounded-xl border bg-card shadow-sm lg:max-h-[min(calc(100dvh-9.5rem),820px)]">
             <div className="relative mx-auto w-full min-w-0 max-w-full">
               <div
                 ref={captureRef}
