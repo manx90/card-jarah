@@ -3,6 +3,11 @@ export function getCategoryPlaceholderImage(slug: string): string {
   return `https://picsum.photos/seed/cat-${encodeURIComponent(slug)}/720/540`;
 }
 
+/** مسار إظهار صورة الفئة (مخصّصة أو إعادة توجيه لصورة بديلة) */
+export function getCategoryImageUrlById(id: string): string {
+  return `/api/v1/categories/${id}/thumbnail`;
+}
+
 export function getTemplatePlaceholderImage(seed: string): string {
   const s = seed.replace(/[^a-zA-Z0-9-]/g, "").slice(0, 32) || "template";
   return `https://picsum.photos/seed/tpl-${s}/800/600`;

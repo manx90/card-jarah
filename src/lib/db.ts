@@ -65,6 +65,19 @@ function logDbConnectionFailed(message: string) {
   );
 }
 
+async function ensureSqliteCategoryThumbnailColumn(ds: DataSource): Promise<void> {
+  if (ds.options.type !== "better-sqlite3") return;
+  try {
+    await ds.query("SELECT thumbnail_path FROM categories LIMIT 1");
+  } catch {
+    try {
+      await ds.query("ALTER TABLE categories ADD COLUMN thumbnail_path TEXT");
+    } catch (e) {
+      console.error("[db] could not add categories.thumbnail_path", e);
+    }
+  }
+}
+
 async function seedCategoriesIfEmpty(ds: DataSource): Promise<void> {
   const repo = ds.getRepository("categories") as Repository<Category>;
   const count = await repo.count();
@@ -141,6 +154,8 @@ export async function getDataSource(): Promise<DataSource> {
   if (process.env.NODE_ENV === "development") {
     logDbConnected();
   }
+
+  await ensureSqliteCategoryThumbnailColumn(ds);
 
   await seedCategoriesIfEmpty(ds);
   await seedBootstrapAdminIfNeeded(ds);

@@ -15,6 +15,7 @@ export async function GET() {
         id: c.id,
         slug: c.slug,
         nameAr: c.nameAr,
+        imageUrl: `/api/v1/categories/${c.id}/thumbnail`,
       })),
     );
   } catch (e) {

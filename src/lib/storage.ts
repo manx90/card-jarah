@@ -27,3 +27,10 @@ export function toDbRelative(absPath: string): string {
   const rel = path.relative(STORAGE_UPLOADS_ROOT, absPath);
   return rel.split(path.sep).join("/");
 }
+
+export async function removeUnderUploads(relativePath: string): Promise<void> {
+  const normalized = path.normalize(relativePath).replace(/^(\.\.(\/|\\|$))+/, "");
+  const abs = absoluteUploadPath(normalized);
+  if (!abs.startsWith(STORAGE_UPLOADS_ROOT)) return;
+  await fs.rm(abs, { recursive: true, force: true });
+}

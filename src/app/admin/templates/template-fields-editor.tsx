@@ -62,9 +62,12 @@ type FieldKind = TemplateField["type"];
 export function TemplateFieldsEditor({
   defaultFieldsJson,
   previewFile,
+  remotePreviewUrl,
 }: {
   defaultFieldsJson: string;
   previewFile: File | null;
+  /** معاينة من الخادم (تعديل قالب) */
+  remotePreviewUrl?: string | null;
 }) {
   const [fields, setFields] = useState<TemplateField[]>(() =>
     parseTemplateFieldsConfig(defaultFieldsJson).fields,
@@ -77,20 +80,24 @@ export function TemplateFieldsEditor({
   const captureRef = useRef<HTMLDivElement>(null);
 
   const previewUrl = useMemo(() => {
-    if (!previewFile) return null;
-    return URL.createObjectURL(previewFile);
-  }, [previewFile]);
+    if (previewFile) return URL.createObjectURL(previewFile);
+    if (remotePreviewUrl) return remotePreviewUrl;
+    return null;
+  }, [previewFile, remotePreviewUrl]);
 
   const previewContainerWidth = useCardPreviewContainerWidth(captureRef, [
     previewFile,
+    remotePreviewUrl,
     previewUrl,
   ]);
 
   useEffect(() => {
     return () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      if (previewFile && previewUrl && previewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(previewUrl);
+      }
     };
-  }, [previewUrl]);
+  }, [previewFile, previewUrl]);
 
   useEffect(() => {
     for (const f of fields) {
@@ -615,7 +622,7 @@ export function TemplateFieldsEditor({
       </div>
 
       <div className="order-1 sticky top-14 z-10 self-start bg-background/95 pb-2 backdrop-blur-sm lg:top-16 lg:order-2">
-        {!previewFile || !previewUrl ? (
+        {!previewUrl ? (
           <div className="bg-muted/50 text-muted-foreground rounded-xl border border-dashed p-6 text-center text-sm lg:min-h-[200px] lg:p-8">
             اختر ملف «صورة القالب» في النموذج لعرض الصورة ووضع الحقول.
           </div>

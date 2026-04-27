@@ -60,7 +60,7 @@ export function SiteHeader() {
             القوالب
           </Link>
           {session?.user?.role === "admin" && (
-            <Link href="/admin/templates" className={cn(navLinkClass, "gap-1.5 text-primary")}>
+            <Link href="/admin" className={cn(navLinkClass, "gap-1.5 text-primary")}>
               <Shield className="size-3.5" aria-hidden />
               الإدارة
             </Link>
@@ -117,7 +117,7 @@ export function SiteHeader() {
                 {session?.user?.role === "admin" && (
                   <SheetClose asChild>
                     <Link
-                      href="/admin/templates"
+                      href="/admin"
                       className={cn(mobileNavItemClass, "text-primary")}
                     >
                       <Shield className="size-5 shrink-0" aria-hidden />

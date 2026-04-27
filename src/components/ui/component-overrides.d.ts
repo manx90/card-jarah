@@ -78,3 +78,56 @@ declare module "@/components/ui/select" {
     children?: React.ReactNode;
   }>;
 }
+
+declare module "@/components/ui/table" {
+  import type * as React from "react";
+  export const Table: React.ComponentType<Record<string, unknown>>;
+  export const TableHeader: React.ComponentType<Record<string, unknown>>;
+  export const TableBody: React.ComponentType<Record<string, unknown>>;
+  export const TableFooter: React.ComponentType<Record<string, unknown>>;
+  export const TableRow: React.ComponentType<Record<string, unknown>>;
+  export const TableHead: React.ComponentType<Record<string, unknown>>;
+  export const TableCell: React.ComponentType<Record<string, unknown>>;
+  export const TableCaption: React.ComponentType<Record<string, unknown>>;
+}
+
+declare module "@/components/ui/dialog" {
+  import type * as React from "react";
+  export const Dialog: React.ComponentType<Record<string, unknown>>;
+  export const DialogTrigger: React.ComponentType<Record<string, unknown>>;
+  export const DialogContent: React.ComponentType<Record<string, unknown>>;
+  export const DialogHeader: React.ComponentType<Record<string, unknown>>;
+  export const DialogFooter: React.ComponentType<Record<string, unknown>>;
+  export const DialogTitle: React.ComponentType<Record<string, unknown>>;
+  export const DialogDescription: React.ComponentType<Record<string, unknown>>;
+  export const DialogClose: React.ComponentType<Record<string, unknown>>;
+}
+
+declare module "@/components/ui/scroll-area" {
+  import type * as React from "react";
+  const C: React.ComponentType<React.HTMLAttributes<HTMLElement> & { className?: string }>;
+  export const ScrollArea: typeof C;
+  export const ScrollBar: React.ComponentType<{
+    className?: string;
+    orientation?: "vertical" | "horizontal";
+  }>;
+}
+
+declare module "@/components/ui/sidebar" {
+  import type * as React from "react";
+  export const SidebarProvider: React.ComponentType<Record<string, unknown>>;
+  const Base: React.ComponentType<Record<string, unknown>>;
+  export const Sidebar: typeof Base;
+  export const SidebarContent: typeof Base;
+  export const SidebarFooter: typeof Base;
+  export const SidebarHeader: typeof Base;
+  export const SidebarGroup: typeof Base;
+  export const SidebarGroupLabel: typeof Base;
+  export const SidebarGroupContent: typeof Base;
+  export const SidebarInset: typeof Base;
+  export const SidebarMenu: typeof Base;
+  export const SidebarMenuItem: typeof Base;
+  export const SidebarMenuButton: React.ComponentType<Record<string, unknown>>;
+  export const SidebarTrigger: typeof Base;
+  export const SidebarRail: typeof Base;
+}

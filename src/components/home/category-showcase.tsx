@@ -1,5 +1,8 @@
 import { DEFAULT_CATEGORIES } from "@/lib/category-defaults";
-import { getCategoryPlaceholderImage } from "@/lib/category-images";
+import {
+  getCategoryImageUrlById,
+  getCategoryPlaceholderImage,
+} from "@/lib/category-images";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
@@ -40,7 +43,9 @@ export function CategoryShowcase({ categories }: CategoryShowcaseProps) {
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {list.map((c) => {
             const href = c.id ? `/templates?category=${c.id}` : "/templates";
-            const imgSrc = getCategoryPlaceholderImage(c.slug);
+            const imgSrc = c.id
+              ? getCategoryImageUrlById(c.id)
+              : getCategoryPlaceholderImage(c.slug);
             return (
               <li key={c.slug}>
                 <Link

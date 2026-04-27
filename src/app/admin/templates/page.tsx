@@ -1,38 +1,51 @@
 import { MissingDatabaseNotice } from "@/components/setup/missing-database";
-import { getCategoryRepository } from "@/lib/db";
+import { getTemplateRepository } from "@/lib/db";
 import { isDatabaseConfigured } from "@/lib/db-config";
-import { AdminTemplateForm } from "./admin-template-form";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { Plus } from "lucide-react";
+import { AdminTemplatesTable } from "./admin-templates-table";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminTemplatesPage() {
+export default async function AdminTemplatesListPage() {
   if (!isDatabaseConfigured()) {
     return (
-      <div className="mx-auto flex max-w-2xl flex-1 flex-col items-center px-4 py-16">
+      <div className="space-y-4">
+        <h1 className="text-2xl font-bold">القوالب</h1>
         <MissingDatabaseNotice />
       </div>
     );
   }
 
-  const categories = await (await getCategoryRepository()).find({
-    order: { nameAr: "ASC" },
-  });
-
-  const defaultFields = JSON.stringify({ fields: [] }, null, 2);
+  const items = await (await getTemplateRepository())
+    .createQueryBuilder("t")
+    .leftJoinAndSelect("t.category", "c")
+    .orderBy("t.createdAt", "DESC")
+    .getMany();
 
   return (
-    <div className="mx-auto max-w-3xl flex-1 px-4 py-8">
-      <h1 className="mb-2 text-2xl font-bold">رفع قالب جديد</h1>
-      <p className="text-muted-foreground mb-8 text-sm">
-        صورة واحدة للقالب — تُعرض للزوار بعلامة مائية؛ بعد الشراء يُحمّل الملف الأصلي من{" "}
-        <code className="bg-muted rounded px-1 text-xs">storage/uploads</code>.
-      </p>
-      <AdminTemplateForm
-        categories={categories.map((c) => ({
-          id: c.id,
-          nameAr: c.nameAr,
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">القوالب</h1>
+          <p className="text-muted-foreground text-sm">إنشاء، تعديل، حذف</p>
+        </div>
+        <Button asChild>
+          <Link href="/admin/templates/new" className="gap-1.5">
+            <Plus className="size-4" />
+            قالب جديد
+          </Link>
+        </Button>
+      </div>
+      <AdminTemplatesTable
+        rows={items.map((t) => ({
+          id: t.id,
+          title: t.title,
+          price: t.price,
+          createdAt: t.createdAt.toISOString(),
+          categoryName: t.category?.nameAr ?? "—",
         }))}
-        defaultFieldsJson={defaultFields}
       />
     </div>
   );
