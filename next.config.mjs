@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  serverExternalPackages: ["typeorm", "better-sqlite3", "reflect-metadata"],
+  serverExternalPackages: ["typeorm", "pg", "reflect-metadata"],
   experimental: {
     serverActions: {
       /** الافتراضي 1MB — رفع صور القوالب (معاينة + نسخة كاملة) يتجاوزه */

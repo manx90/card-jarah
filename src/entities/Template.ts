@@ -38,6 +38,6 @@ export class Template {
   @Column({ name: "fields_json", type: "simple-json", default: "{}" })
   fieldsJson!: TemplateFieldsConfig;
 
-  @CreateDateColumn({ name: "created_at", type: "datetime" })
+  @CreateDateColumn({ name: "created_at", type: "timestamptz" })
   createdAt!: Date;
 }

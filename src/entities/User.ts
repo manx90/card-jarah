@@ -17,6 +17,6 @@ export class User {
   @Column({ type: "varchar", length: 20, default: "user" })
   role!: UserRole;
 
-  @CreateDateColumn({ name: "created_at", type: "datetime" })
+  @CreateDateColumn({ name: "created_at", type: "timestamptz" })
   createdAt!: Date;
 }

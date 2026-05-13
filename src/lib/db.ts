@@ -4,8 +4,6 @@ import { Category } from "@/entities/Category";
 import { Purchase } from "@/entities/Purchase";
 import { Template } from "@/entities/Template";
 import { User } from "@/entities/User";
-import fs from "fs";
-import path from "path";
 import type { Repository } from "typeorm";
 import { DataSource } from "typeorm";
 
@@ -22,33 +20,26 @@ const ansi = {
   cyan: "\x1b[36m",
 };
 
-function resolveSqliteDatabasePath(): string {
+function getPostgresUrl(): string {
   const raw = process.env.DATABASE_URL?.trim();
   if (!raw) {
     throw new Error("DATABASE_URL غير مُعرَّف");
   }
-  if (/^(postgres(ql)?|mysql):\/\//i.test(raw)) {
+  if (!/^postgres(ql)?:\/\//i.test(raw)) {
     throw new Error(
-      "المشروع يستخدم SQLite. عيّن DATABASE_URL إلى مسار ملف مثل file:./data/jarah.sqlite (انظر .env.example).",
+      "عيّن DATABASE_URL إلى عنوان PostgreSQL مثل postgres://المستخدم:كلمة_المرور@localhost:5432/jarah (انظر .env.example).",
     );
   }
-  let p = raw.startsWith("file:") ? raw.slice(5) : raw;
-  if (p.startsWith("//")) {
-    p = p.slice(2);
-  }
-  if (path.isAbsolute(p)) {
-    return p;
-  }
-  return path.resolve(process.cwd(), p);
+  return raw;
 }
 
 function logDbConnected() {
   if (process.env.NO_COLOR) {
-    console.log("[db] Connected to SQLite successfully");
+    console.log("[db] Connected to PostgreSQL successfully");
     return;
   }
   console.log(
-    `${ansi.cyan}${ansi.bold}[db]${ansi.reset} ${ansi.green}Connected to SQLite successfully${ansi.reset}`,
+    `${ansi.cyan}${ansi.bold}[db]${ansi.reset} ${ansi.green}Connected to PostgreSQL successfully${ansi.reset}`,
   );
 }
 
@@ -62,35 +53,16 @@ function logDbConnectionFailed(message: string) {
   );
 }
 
-async function ensureSqliteCategoryThumbnailColumn(ds: DataSource): Promise<void> {
-  if (ds.options.type !== "better-sqlite3") return;
-  try {
-    await ds.query("SELECT thumbnail_path FROM categories LIMIT 1");
-  } catch {
-    try {
-      await ds.query("ALTER TABLE categories ADD COLUMN thumbnail_path TEXT");
-    } catch (e) {
-      console.error("[db] could not add categories.thumbnail_path", e);
-    }
-  }
-}
-
 export async function getDataSource(): Promise<DataSource> {
   if (globalForDb.dataSource?.isInitialized) {
     return globalForDb.dataSource;
   }
 
-  const database = resolveSqliteDatabasePath();
-  const dir = path.dirname(database);
-  if (dir && !fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-
   const synchronize = process.env.TYPEORM_SYNC === "true";
 
   const ds = new DataSource({
-    type: "better-sqlite3",
-    database,
+    type: "postgres",
+    url: getPostgresUrl(),
     entities: [User, Category, Template, Purchase],
     synchronize,
     logging: process.env.TYPEORM_LOGGING === "true",
@@ -107,8 +79,6 @@ export async function getDataSource(): Promise<DataSource> {
   if (process.env.NODE_ENV === "development") {
     logDbConnected();
   }
-
-  await ensureSqliteCategoryThumbnailColumn(ds);
 
   globalForDb.dataSource = ds;
   return ds;

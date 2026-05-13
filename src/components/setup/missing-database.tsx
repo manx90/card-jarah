@@ -29,7 +29,7 @@ export function MissingDatabaseNotice() {
         <code className="rounded bg-black/10 px-1.5 py-0.5 text-xs dark:bg-white/10">
           TYPEORM_SYNC=true
         </code>{" "}
-        ثم شغّل السيرفر (SQLite لا يحتاج خادماً منفصلاً).
+        ثم شغّل السيرفر بعد تشغيل خادم PostgreSQL وإنشاء قاعدة البيانات.
       </p>
       <Link
         href="/"

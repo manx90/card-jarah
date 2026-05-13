@@ -36,6 +36,6 @@ export class Purchase {
   @Column({ type: "varchar", length: 40, default: "mock_completed" })
   status!: PurchaseStatus;
 
-  @CreateDateColumn({ name: "created_at", type: "datetime" })
+  @CreateDateColumn({ name: "created_at", type: "timestamptz" })
   createdAt!: Date;
 }

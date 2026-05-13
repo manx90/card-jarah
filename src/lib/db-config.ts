@@ -1,4 +1,6 @@
-/** هل تم ضبط مسار SQLite (`DATABASE_URL`) في البيئة؟ (لا يتحقق من إمكانية الاتصال الفعلي) */
+/** هل `DATABASE_URL` عنوان PostgreSQL صالح؟ (لا يتحقق من الاتصال الفعلي) */
 export function isDatabaseConfigured(): boolean {
-  return Boolean(process.env.DATABASE_URL?.trim());
+  const url = process.env.DATABASE_URL?.trim();
+  if (!url) return false;
+  return /^postgres(ql)?:\/\//i.test(url);
 }
