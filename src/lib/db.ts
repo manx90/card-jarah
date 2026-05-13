@@ -1,12 +1,9 @@
 /** يجب أن يُحمَّل reflect-metadata قبل أي استيراد لكيانات TypeORM (الديكورات). */
 import "reflect-metadata";
-import { DEFAULT_ADMIN_EMAIL, DEFAULT_ADMIN_PASSWORD } from "@/lib/admin-defaults";
-import { DEFAULT_CATEGORIES } from "@/lib/category-defaults";
 import { Category } from "@/entities/Category";
 import { Purchase } from "@/entities/Purchase";
 import { Template } from "@/entities/Template";
 import { User } from "@/entities/User";
-import bcrypt from "bcryptjs";
 import fs from "fs";
 import path from "path";
 import type { Repository } from "typeorm";
@@ -78,50 +75,6 @@ async function ensureSqliteCategoryThumbnailColumn(ds: DataSource): Promise<void
   }
 }
 
-async function seedCategoriesIfEmpty(ds: DataSource): Promise<void> {
-  const repo = ds.getRepository("categories") as Repository<Category>;
-  const count = await repo.count();
-  if (count > 0) return;
-  await repo.insert(DEFAULT_CATEGORIES);
-}
-
-async function seedBootstrapAdminIfNeeded(ds: DataSource): Promise<void> {
-  const email =
-    process.env.BOOTSTRAP_ADMIN_EMAIL?.trim().toLowerCase() || DEFAULT_ADMIN_EMAIL;
-  const password =
-    process.env.BOOTSTRAP_ADMIN_PASSWORD?.trim() || DEFAULT_ADMIN_PASSWORD;
-
-  const repo = ds.getRepository("users") as Repository<User>;
-  const existing = await repo.findOne({ where: { email } });
-
-  if (existing) {
-    if (process.env.NODE_ENV === "development") {
-      const passwordHash = await bcrypt.hash(password, 12);
-      existing.passwordHash = passwordHash;
-      existing.role = "admin";
-      await repo.save(existing);
-      console.log(
-        `${ansi.cyan}${ansi.bold}[admin]${ansi.reset} ${ansi.dim}dev: synced bootstrap admin password + role${ansi.reset} → ${email}`,
-      );
-    }
-    return;
-  }
-
-  const passwordHash = await bcrypt.hash(password, 12);
-  const admin = repo.create({
-    email,
-    passwordHash,
-    role: "admin",
-  });
-  await repo.save(admin);
-
-  if (process.env.NODE_ENV === "development") {
-    console.log(
-      `${ansi.cyan}${ansi.bold}[admin]${ansi.reset} ${ansi.green}Created bootstrap admin${ansi.reset} → ${ansi.dim}${email}${ansi.reset} (see src/lib/admin-defaults.ts)`,
-    );
-  }
-}
-
 export async function getDataSource(): Promise<DataSource> {
   if (globalForDb.dataSource?.isInitialized) {
     return globalForDb.dataSource;
@@ -157,8 +110,6 @@ export async function getDataSource(): Promise<DataSource> {
 
   await ensureSqliteCategoryThumbnailColumn(ds);
 
-  await seedCategoriesIfEmpty(ds);
-  await seedBootstrapAdminIfNeeded(ds);
   globalForDb.dataSource = ds;
   return ds;
 }
