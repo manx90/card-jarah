@@ -56,7 +56,7 @@ export async function cbkAuthenticate(creds: CbkCredentials): Promise<string> {
       gatewayStatus: json.Status,
       gatewayMessage: msg,
       httpStatus: res.status,
-      raw: json as Record<string, unknown>,
+      raw: json as unknown as Record<string, unknown>,
     });
     throw new Error(`فشل توثيق CBK: ${msg}`);
   }
@@ -93,7 +93,7 @@ export async function cbkGetTransactions(
       httpStatus: res.status,
       gatewayStatus: json.Status,
       gatewayMessage: json.Message,
-      raw: json as Record<string, unknown>,
+      raw: json as unknown as Record<string, unknown>,
     });
     throw new Error(`GetTransactions: HTTP ${res.status}`);
   }
@@ -106,7 +106,7 @@ export async function cbkGetTransactions(
       paymentTrackId: json.PayId ?? json.TrackId,
       amount: json.Amount,
       payType: json.PayType,
-      raw: json as Record<string, unknown>,
+      raw: json as unknown as Record<string, unknown>,
     });
   }
   return json;
@@ -141,7 +141,7 @@ export async function cbkVerifyByTrackId(
       gatewayStatus: json.Status,
       gatewayMessage: json.Message,
       paymentTrackId: payId,
-      raw: json as Record<string, unknown>,
+      raw: json as unknown as Record<string, unknown>,
     });
     throw new Error(`Verify: HTTP ${res.status}`);
   }
@@ -154,7 +154,7 @@ export async function cbkVerifyByTrackId(
       paymentTrackId: payId,
       amount: json.Amount,
       payType: json.PayType,
-      raw: json as Record<string, unknown>,
+      raw: json as unknown as Record<string, unknown>,
     });
   }
   return json;

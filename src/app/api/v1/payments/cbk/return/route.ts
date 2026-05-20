@@ -1,4 +1,5 @@
 import { withApiHandler } from "@/lib/api-route";
+import type { Purchase } from "@/entities/Purchase";
 import { getPurchaseRepository } from "@/lib/db";
 import { getAppPublicBaseUrl, getCbkCredentials } from "@/modules/payments/cbk-config";
 import {
@@ -220,15 +221,9 @@ export const GET = withApiHandler("v1.payments.cbk.return", async (request: Requ
 });
 
 async function finalizePurchase(
-  purchase: {
-    id: string;
-    templateId: string;
-    status: string;
-    paymentMeta: Record<string, unknown> | null;
-    paymentTrackId: string | null;
-  },
+  purchase: Purchase,
   details: CbkTransactionDetails,
-  nextStatus: ReturnType<typeof purchaseStatusFromCbk>,
+  nextStatus: Purchase["status"],
   payTrackIdParam: string | null,
   extraMeta?: Record<string, unknown>,
 ) {

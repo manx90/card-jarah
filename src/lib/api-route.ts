@@ -2,7 +2,7 @@ import { jsonError } from "@/lib/api-response";
 import { logger } from "@/lib/logger";
 
 export interface RouteContext {
-  params?: Promise<Record<string, string>>;
+  params?: Promise<Record<string, string | string[]>>;
 }
 
 function clientIp(request: Request): string | undefined {
