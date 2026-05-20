@@ -82,7 +82,12 @@ export function AdminCategoriesTable({
   }
 
   async function onDelete(id: string) {
-    if (!window.confirm("حذف هذه الفئة؟")) return;
+    if (
+      !window.confirm(
+        "حذف هذه الفئة وجميع قوالبها؟ لا يمكن التراجع.",
+      )
+    )
+      return;
     setDeleting(id);
     const r = await deleteCategoryAction(id);
     setDeleting(null);

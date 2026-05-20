@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "bootstrap:admin": "npx tsx scripts/bootstrap-admin.ts",
+    "bootstrap:clear-categories": "npx tsx scripts/clear-all-categories.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.3.0",

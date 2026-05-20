@@ -1,7 +1,8 @@
 "use server";
 
 import { auth } from "@/auth";
-import { getCategoryRepository, getTemplateRepository } from "@/lib/db";
+import { deleteCategoryCascade } from "@/lib/delete-category-cascade";
+import { getCategoryRepository } from "@/lib/db";
 import { isDatabaseConfigured } from "@/lib/db-config";
 import {
   absoluteUploadPath,
@@ -9,6 +10,7 @@ import {
   removeUnderUploads,
   toDbRelative,
 } from "@/lib/storage";
+import { revalidateCategoryPages } from "@/lib/revalidate-public";
 import { writeFile } from "fs/promises";
 import path from "path";
 import { randomUUID } from "crypto";
@@ -78,6 +80,7 @@ export async function createCategoryAction(
       thumbnailPath,
     });
     await repo.save(entity);
+    revalidateCategoryPages();
     return { ok: true, id };
   } catch (e) {
     console.error("[createCategoryAction]", e);
@@ -132,6 +135,7 @@ export async function updateCategoryAction(
     row.slug = slug;
     row.nameAr = nameAr;
     await repo.save(row);
+    revalidateCategoryPages();
     return { ok: true, id: row.id };
   } catch (e) {
     console.error("[updateCategoryAction]", e);
@@ -153,21 +157,11 @@ export async function deleteCategoryAction(categoryId: string): Promise<Mutation
   }
 
   try {
-    const tRepo = await getTemplateRepository();
-    const inUse = await tRepo.count({ where: { categoryId: id } });
-    if (inUse > 0) {
-      return {
-        ok: false,
-        error: "لا يمكن حذف فئة مرتبطة بقوالب. انقل القوالب أو احذفها أولاً.",
-      };
-    }
-    const cRepo = await getCategoryRepository();
-    const row = await cRepo.findOne({ where: { id } });
-    if (!row) {
+    const deleted = await deleteCategoryCascade(id);
+    if (!deleted) {
       return { ok: false, error: "الفئة غير موجودة" };
     }
-    await cRepo.remove(row);
-    await removeUnderUploads(`categories/${id}`);
+    revalidateCategoryPages();
     return { ok: true };
   } catch (e) {
     console.error("[deleteCategoryAction]", e);

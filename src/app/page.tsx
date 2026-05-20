@@ -4,8 +4,15 @@ import { getCategoryRepository } from "@/lib/db";
 import { isDatabaseConfigured } from "@/lib/db-config";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
-  let showcaseCategories: { id: string; slug: string; nameAr: string }[] = [];
+  let showcaseCategories: {
+    id: string;
+    slug: string;
+    nameAr: string;
+    hasThumbnail: boolean;
+  }[] = [];
   if (isDatabaseConfigured()) {
     const rows = await (await getCategoryRepository()).find({
       order: { nameAr: "ASC" },
@@ -14,6 +21,7 @@ export default async function HomePage() {
       id: c.id,
       slug: c.slug,
       nameAr: c.nameAr,
+      hasThumbnail: Boolean(c.thumbnailPath),
     }));
   }
 

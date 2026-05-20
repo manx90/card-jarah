@@ -1,5 +1,4 @@
 import { getCategoryRepository } from "@/lib/db";
-import { getCategoryPlaceholderImage } from "@/lib/category-images";
 import { requireDatabaseConfigured } from "@/lib/api-db-guard";
 import { jsonError } from "@/lib/api-response";
 import { absoluteUploadPath } from "@/lib/storage";
@@ -50,7 +49,7 @@ export async function GET(
       }
     }
 
-    return NextResponse.redirect(getCategoryPlaceholderImage(row.slug));
+    return jsonError("NOT_FOUND", "لا توجد صورة لهذه الفئة", 404);
   } catch (e) {
     console.error("[category thumbnail]", e);
     return jsonError("SERVER_ERROR", "تعذّر تحميل الصورة", 500);
