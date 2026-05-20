@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { formatPriceKwd } from "@/lib/currency";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -107,7 +108,7 @@ export function TemplatesBrowser({
                 {t.description && (
                   <p className="text-muted-foreground line-clamp-2 text-sm">{t.description}</p>
                 )}
-                <p className="mt-2 text-sm font-semibold">{t.price} ر.س</p>
+                <p className="mt-2 text-sm font-semibold">{formatPriceKwd(t.price)}</p>
               </CardContent>
               <CardFooter className="gap-2 pt-0">
                 <Button size="sm" className="flex-1" asChild>

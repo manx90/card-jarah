@@ -6,6 +6,7 @@ import {
   getTemplateRepository,
 } from "@/lib/db";
 import { isCbkPaymentConfigured } from "@/modules/payments/cbk-config";
+import { formatPriceKwd } from "@/lib/currency";
 import { formatPaymentUserMessage } from "@/modules/payments/cbk-errors";
 import { isDatabaseConfigured } from "@/lib/db-config";
 import { Button } from "@/components/ui/button";
@@ -107,7 +108,7 @@ export default async function TemplateDetailPage({
                 {template.description}
               </p>
             )}
-            <p className="text-lg font-semibold">{template.price} ر.س</p>
+            <p className="text-lg font-semibold">{formatPriceKwd(template.price)}</p>
             {paymentNotice && (
               <p
                 className={

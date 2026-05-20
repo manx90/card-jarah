@@ -11,6 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Pencil, Trash2, ExternalLink } from "lucide-react";
+import { formatPriceKwd } from "@/lib/currency";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -72,7 +73,7 @@ export function AdminTemplatesTable({
                 </TableCell>
                 <TableCell className="text-muted-foreground">{r.categoryName}</TableCell>
                 <TableCell dir="ltr" className="tabular-nums">
-                  {r.price} ر.س
+                  {formatPriceKwd(r.price)}
                 </TableCell>
                 <TableCell className="text-muted-foreground text-sm" dir="ltr">
                   {new Date(r.createdAt).toLocaleString("ar-SA")}

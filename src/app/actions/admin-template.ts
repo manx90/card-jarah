@@ -9,6 +9,7 @@ import {
   removeUnderUploads,
   toDbRelative,
 } from "@/lib/storage";
+import { parseKwdPrice } from "@/lib/currency";
 import type { TemplateFieldsConfig } from "@/types/template-fields";
 import { writeFile } from "fs/promises";
 import path from "path";
@@ -68,7 +69,7 @@ export async function createTemplateAction(
     }
   }
 
-  const price = /^\d+(\.\d{1,2})?$/.test(priceRaw) ? priceRaw : "0";
+  const price = parseKwdPrice(priceRaw);
 
   const id = randomUUID();
   const subdir = `templates/${id}`;
@@ -139,7 +140,7 @@ export async function updateTemplateAction(
       return { ok: false, error: "JSON حقول التخصيص غير صالح" };
     }
   }
-  const price = /^\d+(\.\d{1,2})?$/.test(priceRaw) ? priceRaw : "0";
+  const price = parseKwdPrice(priceRaw);
 
   try {
     const repo = await getTemplateRepository();

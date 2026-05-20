@@ -94,8 +94,15 @@ export function AdminTemplateForm({
         </Select>
       </div>
       <div className="space-y-2">
-        <Label htmlFor="price">السعر (ر.س)</Label>
-        <Input id="price" name="price" type="text" defaultValue="0" />
+        <Label htmlFor="price">السعر (د.ك — دينار كويتي)</Label>
+        <Input
+          id="price"
+          name="price"
+          type="text"
+          inputMode="decimal"
+          placeholder="0.000"
+          defaultValue="0.000"
+        />
       </div>
       <div className="space-y-2">
         <Label htmlFor="source">صورة القالب (ملف واحد — تُعرض للمعاينة بعلامة مائية؛ بعد الشراء يُحمّل الأصلي)</Label>

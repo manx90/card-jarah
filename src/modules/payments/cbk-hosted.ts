@@ -234,10 +234,4 @@ export function buildCbkCheckoutActionUrl(
   return `${creds.pgBaseUrl}/ePay/pg/epay?_v=${encodeURIComponent(accessToken)}`;
 }
 
-export function formatCbkAmountKuwaitStyle(priceDecimalString: string): string {
-  const n = Number(priceDecimalString);
-  if (!Number.isFinite(n) || n < 0) {
-    throw new Error("مبلغ غير صالح");
-  }
-  return n.toFixed(3);
-}
+export { formatAmountForCbk as formatCbkAmountKuwaitStyle } from "@/lib/currency";

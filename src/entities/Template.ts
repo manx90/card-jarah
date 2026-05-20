@@ -28,7 +28,7 @@ export class Template {
   @Column({ type: "text", nullable: true })
   description!: string | null;
 
-  @Column({ type: "numeric", precision: 10, scale: 2, default: 0 })
+  @Column({ type: "numeric", precision: 10, scale: 3, default: 0 })
   price!: string;
 
   /** ملف الصورة الأصلي — المعاينة تُولَّد مع علامة مائية؛ التحميل بعد الشراء بدون تعديل */
