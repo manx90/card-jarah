@@ -1,4 +1,6 @@
+import { withApiHandler } from "@/lib/api-route";
 import { jsonError, jsonSuccess } from "@/lib/api-response";
+import { logger } from "@/lib/logger";
 import { requireDatabaseConfigured } from "@/lib/api-db-guard";
 import { auth } from "@/auth";
 import { purchaseAccessStatusIn } from "@/lib/purchase-access";
@@ -10,10 +12,9 @@ import { z } from "zod";
 
 const idSchema = z.string().uuid();
 
-export async function GET(
-  _request: Request,
-  context: { params: Promise<{ id: string }> },
-) {
+export const GET = withApiHandler(
+  "v1.templates.detail",
+  async (_request: Request, context: { params: Promise<{ id: string }> }) => {
   const { id } = await context.params;
   if (!idSchema.safeParse(id).success) {
     return jsonError("VALIDATION_ERROR", "معرّف غير صالح", 422);
@@ -61,7 +62,8 @@ export async function GET(
       purchased,
     });
   } catch (e) {
-    console.error("[template detail]", e);
+    await logger.error("templates.detail_failed", { error: String(e) });
     return jsonError("SERVER_ERROR", "تعذّر تحميل القالب", 500);
   }
-}
+  },
+);

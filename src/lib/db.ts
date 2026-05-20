@@ -1,5 +1,6 @@
 /** يجب أن يُحمَّل reflect-metadata قبل أي استيراد لكيانات TypeORM (الديكورات). */
 import "reflect-metadata";
+import { logger } from "@/lib/logger";
 import { Category } from "@/entities/Category";
 import { Purchase } from "@/entities/Purchase";
 import { Template } from "@/entities/Template";
@@ -73,12 +74,14 @@ export async function getDataSource(): Promise<DataSource> {
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     logDbConnectionFailed(msg);
+    void logger.error("database.connection_failed", { message: msg });
     throw err;
   }
 
   if (process.env.NODE_ENV === "development") {
     logDbConnected();
   }
+  void logger.event("database.connected");
 
   globalForDb.dataSource = ds;
   return ds;

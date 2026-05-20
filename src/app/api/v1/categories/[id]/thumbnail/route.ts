@@ -1,6 +1,8 @@
+import { withApiHandler } from "@/lib/api-route";
 import { getCategoryRepository } from "@/lib/db";
 import { requireDatabaseConfigured } from "@/lib/api-db-guard";
 import { jsonError } from "@/lib/api-response";
+import { logger } from "@/lib/logger";
 import { absoluteUploadPath } from "@/lib/storage";
 import { existsSync } from "fs";
 import { readFile } from "fs/promises";
@@ -19,10 +21,9 @@ function mimeForFile(abs: string): string {
   return "application/octet-stream";
 }
 
-export async function GET(
-  _request: Request,
-  context: { params: Promise<{ id: string }> },
-) {
+export const GET = withApiHandler(
+  "v1.categories.thumbnail",
+  async (_request: Request, context: { params: Promise<{ id: string }> }) => {
   const { id } = await context.params;
   if (!idSchema.safeParse(id).success) {
     return jsonError("VALIDATION_ERROR", "معرّف غير صالح", 422);
@@ -51,7 +52,8 @@ export async function GET(
 
     return jsonError("NOT_FOUND", "لا توجد صورة لهذه الفئة", 404);
   } catch (e) {
-    console.error("[category thumbnail]", e);
+    await logger.error("categories.thumbnail_failed", { error: String(e) });
     return jsonError("SERVER_ERROR", "تعذّر تحميل الصورة", 500);
   }
-}
+  },
+);

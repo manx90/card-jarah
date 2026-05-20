@@ -2,6 +2,7 @@ import "reflect-metadata";
 import bcrypt from "bcryptjs";
 import { getUserRepository } from "@/lib/db";
 import { isDatabaseConfigured } from "@/lib/db-config";
+import { logger } from "@/lib/logger";
 
 /** ينشئ أو يصلح المدير من ADMIN_EMAIL و ADMIN_PASSWORD (دور admin + كلمة المرور) */
 export async function ensureDefaultAdmin(): Promise<void> {
@@ -9,13 +10,11 @@ export async function ensureDefaultAdmin(): Promise<void> {
   const password = process.env.ADMIN_PASSWORD?.trim();
 
   if (!email || !password) {
-    console.warn(
-      "[bootstrap] default admin skipped: set ADMIN_EMAIL and ADMIN_PASSWORD in .env",
-    );
+    await logger.warn("default admin skipped: ADMIN_EMAIL or ADMIN_PASSWORD missing");
     return;
   }
   if (!isDatabaseConfigured()) {
-    console.warn("[bootstrap] default admin skipped: DATABASE_URL not configured");
+    await logger.warn("default admin skipped: DATABASE_URL not configured");
     return;
   }
 
@@ -31,36 +30,30 @@ export async function ensureDefaultAdmin(): Promise<void> {
         role: "admin",
       }),
     );
-    console.log("[bootstrap] default admin created:", email);
+    await logger.event("admin.created", { email });
     return;
   }
 
   const repairs: string[] = [];
 
   if (existing.role !== "admin") {
-    console.warn(
-      `[bootstrap] user exists but role is "${existing.role}" — upgrading to admin:`,
-      email,
-    );
+    await logger.warn("admin role repair", { email, from: existing.role });
     existing.role = "admin";
     repairs.push("role→admin");
   }
 
   const passwordMatches = await bcrypt.compare(password, existing.passwordHash);
   if (!passwordMatches) {
-    console.warn(
-      "[bootstrap] ADMIN_PASSWORD does not match stored hash — updating password:",
-      email,
-    );
+    await logger.warn("admin password sync", { email });
     existing.passwordHash = await bcrypt.hash(password, 12);
     repairs.push("password synced");
   }
 
   if (repairs.length > 0) {
     await repo.save(existing);
-    console.log("[bootstrap] default admin repaired:", email, repairs.join(", "));
+    await logger.event("admin.repaired", { email, repairs: repairs.join(", ") });
     return;
   }
 
-  console.log("[bootstrap] default admin ok:", email);
+  await logger.event("admin.ok", { email });
 }

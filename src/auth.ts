@@ -1,6 +1,7 @@
 import { authConfig } from "@/auth.config";
 import { getUserRepository } from "@/lib/db";
 import { isDatabaseConfigured } from "@/lib/db-config";
+import { logger } from "@/lib/logger";
 import type { UserRole } from "@/entities/User";
 import bcrypt from "bcryptjs";
 import NextAuth from "next-auth";
@@ -28,11 +29,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const password = coerceCredentialString(credentials?.password);
 
         if (!email || !password) {
-          console.warn("[auth] authorize: missing email or password");
+          await logger.auth("login.failed", { reason: "missing_credentials" });
           return null;
         }
         if (!isDatabaseConfigured()) {
-          console.warn("[auth] authorize: DATABASE_URL not configured");
+          await logger.auth("login.failed", { reason: "database_not_configured" });
           return null;
         }
 
@@ -40,17 +41,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           const repo = await getUserRepository();
           const user = await repo.findOne({ where: { email } });
           if (!user) {
-            console.warn("[auth] authorize: no user for email", email);
+            await logger.auth("login.failed", { reason: "user_not_found", email });
             return null;
           }
 
           const ok = await bcrypt.compare(password, user.passwordHash);
           if (!ok) {
-            console.warn("[auth] authorize: invalid password for", email);
+            await logger.auth("login.failed", { reason: "invalid_password", email });
             return null;
           }
 
-          console.log("[auth] authorize: success", { email, role: user.role });
+          await logger.auth("login.success", { email, role: user.role });
           return {
             id: user.id,
             name: user.email,
@@ -58,10 +59,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             role: user.role as UserRole,
           };
         } catch (e) {
-          console.error(
-            "[auth] authorize error:",
-            e instanceof Error ? e.message : e,
-          );
+          await logger.error("auth.authorize_error", {
+            email,
+            error: e instanceof Error ? e.message : String(e),
+          });
           return null;
         }
       },

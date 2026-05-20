@@ -1,4 +1,6 @@
+import { withApiHandler } from "@/lib/api-route";
 import { jsonError, jsonSuccess } from "@/lib/api-response";
+import { logger } from "@/lib/logger";
 import { requireDatabaseConfigured } from "@/lib/api-db-guard";
 import { auth } from "@/auth";
 import {
@@ -12,6 +14,7 @@ import {
   formatCbkAmountKuwaitStyle,
   getCbkAccessToken,
 } from "@/modules/payments/cbk-hosted";
+import { logPaymentError } from "@/modules/payments/payment-error-log";
 import {
   getPurchaseRepository,
   getTemplateRepository,
@@ -36,8 +39,9 @@ function generatePaymentTrack(): string {
   return s;
 }
 
-export async function POST(request: Request) {
+export const POST = withApiHandler("v1.purchases.checkout", async (request: Request) => {
   if (!isCbkPaymentConfigured()) {
+    await logPaymentError({ phase: "checkout", code: "CBK_NOT_CONFIGURED" });
     return jsonError(
       "CBK_NOT_CONFIGURED",
       "دفع CBK غير مُفعّل — أضف متغيّرات البيئة",
@@ -118,6 +122,13 @@ export async function POST(request: Request) {
 
     const actionUrl = buildCbkCheckoutActionUrl(creds, accessToken);
 
+    await logger.event("payment.checkout_started", {
+      purchaseId: purchase.id,
+      userId: session.user.id,
+      templateId,
+      trackId: track,
+    });
+
     return jsonSuccess({
       purchaseId: purchase.id,
       actionUrl,
@@ -126,8 +137,14 @@ export async function POST(request: Request) {
       trackId: track,
     });
   } catch (e) {
-    console.error("[checkout cbk]", e);
+    await logPaymentError({
+      phase: "checkout",
+      code: "SERVER",
+      error: e,
+      userId: session.user.id,
+      templateId,
+    });
     const msg = e instanceof Error ? e.message : "تعذّر بدء الدفع";
     return jsonError("SERVER_ERROR", msg, 500);
   }
-}
+});

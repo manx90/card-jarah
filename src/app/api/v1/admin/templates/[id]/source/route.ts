@@ -1,4 +1,6 @@
+import { withApiHandler } from "@/lib/api-route";
 import { jsonError } from "@/lib/api-response";
+import { logger } from "@/lib/logger";
 import { requireDatabaseConfigured } from "@/lib/api-db-guard";
 import { getAdminOr403 } from "@/lib/require-admin-api";
 import { getTemplateRepository } from "@/lib/db";
@@ -11,10 +13,9 @@ import { z } from "zod";
 
 const idSchema = z.string().uuid();
 
-export async function GET(
-  _request: Request,
-  context: { params: Promise<{ id: string }> },
-) {
+export const GET = withApiHandler(
+  "v1.admin.templates.source",
+  async (_request: Request, context: { params: Promise<{ id: string }> }) => {
   const { id } = await context.params;
   if (!idSchema.safeParse(id).success) {
     return jsonError("VALIDATION_ERROR", "معرّف غير صالح", 422);
@@ -50,7 +51,8 @@ export async function GET(
       },
     });
   } catch (e) {
-    console.error("[admin template source]", e);
+    await logger.error("admin.template_source_failed", { error: String(e) });
     return jsonError("SERVER_ERROR", "تعذّر تحميل الملف", 500);
   }
-}
+  },
+);

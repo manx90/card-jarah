@@ -6,6 +6,7 @@ import {
   getTemplateRepository,
 } from "@/lib/db";
 import { isCbkPaymentConfigured } from "@/modules/payments/cbk-config";
+import { formatPaymentUserMessage } from "@/modules/payments/cbk-errors";
 import { isDatabaseConfigured } from "@/lib/db-config";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,7 +27,7 @@ export default async function TemplateDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams?: Promise<{ payment?: string; code?: string; status?: string }>;
+  searchParams?: Promise<{ payment?: string; code?: string; status?: string; msg?: string }>;
 }) {
   const { id } = await params;
   const sp = searchParams ? await searchParams : {};
@@ -65,7 +66,12 @@ export default async function TemplateDetailPage({
       : sp.payment === "error"
         ? {
             kind: "err" as const,
-            text: `تعذّر إتمام الدفع${sp.code ? ` (${sp.code})` : ""}${sp.status ? ` — حالة ${sp.status}` : ""}.`,
+            text:
+              sp.msg ??
+              formatPaymentUserMessage({
+                code: sp.code,
+                status: sp.status,
+              }),
           }
         : null;
 

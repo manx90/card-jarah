@@ -1,4 +1,6 @@
+import { withApiHandler } from "@/lib/api-route";
 import { jsonError, jsonSuccess } from "@/lib/api-response";
+import { logger } from "@/lib/logger";
 import { requireDatabaseConfigured } from "@/lib/api-db-guard";
 import { auth } from "@/auth";
 import {
@@ -12,7 +14,7 @@ const bodySchema = z.object({
   templateId: z.string().uuid(),
 });
 
-export async function POST(request: Request) {
+export const POST = withApiHandler("v1.purchases.mock", async (request: Request) => {
   const session = await auth();
   if (!session?.user?.id) {
     return jsonError("UNAUTHORIZED", "يجب تسجيل الدخول", 401);
@@ -65,13 +67,19 @@ export async function POST(request: Request) {
       await repo.save(purchase);
     }
 
+    await logger.event("purchase.mock_completed", {
+      purchaseId: purchase.id,
+      userId: session.user.id,
+      templateId,
+    });
+
     return jsonSuccess({
       purchaseId: purchase.id,
       status: purchase.status,
       downloadUrl: `/api/v1/templates/${templateId}/download`,
     });
   } catch (e) {
-    console.error("[mock purchase]", e);
+    await logger.error("purchase.mock_failed", { error: String(e) });
     return jsonError("SERVER_ERROR", "تعذّر إتمام الشراء", 500);
   }
-}
+});

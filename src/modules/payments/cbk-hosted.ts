@@ -1,5 +1,7 @@
 import { Buffer } from "node:buffer";
 import type { CbkCredentials } from "./cbk-config";
+import { resolveCbkPaymentStatus } from "./cbk-errors";
+import { logPaymentError } from "./payment-error-log";
 import {
   clearCachedCbkAccessToken,
   readCachedCbkAccessToken,
@@ -49,6 +51,13 @@ export async function cbkAuthenticate(creds: CbkCredentials): Promise<string> {
   const json = (await res.json()) as { Status?: string; AccessToken?: string; Message?: string };
   if (!res.ok || json.Status !== "1" || !json.AccessToken) {
     const msg = json.Message ?? `HTTP ${res.status}`;
+    await logPaymentError({
+      phase: "authenticate",
+      gatewayStatus: json.Status,
+      gatewayMessage: msg,
+      httpStatus: res.status,
+      raw: json as Record<string, unknown>,
+    });
     throw new Error(`فشل توثيق CBK: ${msg}`);
   }
   return json.AccessToken;
@@ -79,7 +88,26 @@ export async function cbkGetTransactions(
     clearCachedCbkAccessToken();
   }
   if (!res.ok) {
+    await logPaymentError({
+      phase: "get_transactions",
+      httpStatus: res.status,
+      gatewayStatus: json.Status,
+      gatewayMessage: json.Message,
+      raw: json as Record<string, unknown>,
+    });
     throw new Error(`GetTransactions: HTTP ${res.status}`);
+  }
+  if (json.Status && json.Status !== "1") {
+    const st = resolveCbkPaymentStatus(json.Status);
+    await logPaymentError({
+      phase: "get_transactions",
+      gatewayStatus: json.Status,
+      gatewayMessage: json.Message ?? st?.messageAr,
+      paymentTrackId: json.PayId ?? json.TrackId,
+      amount: json.Amount,
+      payType: json.PayType,
+      raw: json as Record<string, unknown>,
+    });
   }
   return json;
 }
@@ -107,7 +135,27 @@ export async function cbkVerifyByTrackId(
     clearCachedCbkAccessToken();
   }
   if (!res.ok) {
+    await logPaymentError({
+      phase: "verify",
+      httpStatus: res.status,
+      gatewayStatus: json.Status,
+      gatewayMessage: json.Message,
+      paymentTrackId: payId,
+      raw: json as Record<string, unknown>,
+    });
     throw new Error(`Verify: HTTP ${res.status}`);
+  }
+  if (json.Status && json.Status !== "1") {
+    const st = resolveCbkPaymentStatus(json.Status);
+    await logPaymentError({
+      phase: "verify",
+      gatewayStatus: json.Status,
+      gatewayMessage: json.Message ?? st?.messageAr,
+      paymentTrackId: payId,
+      amount: json.Amount,
+      payType: json.PayType,
+      raw: json as Record<string, unknown>,
+    });
   }
   return json;
 }

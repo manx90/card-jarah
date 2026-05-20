@@ -15,14 +15,14 @@ export class Template {
   @PrimaryColumn("uuid")
   id!: string;
 
-  @Column({ name: "category_id" })
+  @Column({ name: "category_id", type: "uuid" })
   categoryId!: string;
 
   @ManyToOne(() => Category, { onDelete: "RESTRICT" })
   @JoinColumn({ name: "category_id" })
   category!: Category;
 
-  @Column()
+  @Column({ type: "varchar" })
   title!: string;
 
   @Column({ type: "text", nullable: true })

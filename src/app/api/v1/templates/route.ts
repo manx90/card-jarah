@@ -1,4 +1,6 @@
+import { withApiHandler } from "@/lib/api-route";
 import { jsonError, jsonSuccess } from "@/lib/api-response";
+import { logger } from "@/lib/logger";
 import { requireDatabaseConfigured } from "@/lib/api-db-guard";
 import { getTemplateRepository } from "@/lib/db";
 import { z } from "zod";
@@ -9,7 +11,7 @@ const querySchema = z.object({
   limit: z.coerce.number().int().min(1).max(50).optional().default(12),
 });
 
-export async function GET(request: Request) {
+export const GET = withApiHandler("v1.templates.list", async (request: Request) => {
   const url = new URL(request.url);
   const raw = {
     categoryId: url.searchParams.get("categoryId") ?? undefined,
@@ -59,7 +61,7 @@ export async function GET(request: Request) {
       total,
     });
   } catch (e) {
-    console.error("[templates list]", e);
+    await logger.error("templates.list_failed", { error: String(e) });
     return jsonError("SERVER_ERROR", "تعذّر تحميل القوالب", 500);
   }
-}
+});

@@ -28,6 +28,9 @@ yarn-error.log*
 !.env.example
 # local uploads (قوالب وصور)
 /storage
+# سجلات التطبيق
+/logs
+/CBK HOSTED KNET & T-PAY PAYMENT GATEWAY-Integration & Reference Manual.pdf
 # SQLite المحلي
 /data/*.sqlite
 /data/*.db

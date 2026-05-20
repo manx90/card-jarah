@@ -1,4 +1,6 @@
+import { withApiHandler } from "@/lib/api-route";
 import { jsonError, jsonSuccess } from "@/lib/api-response";
+import { logger } from "@/lib/logger";
 import { requireDatabaseConfigured } from "@/lib/api-db-guard";
 import { getUserRepository } from "@/lib/db";
 import bcrypt from "bcryptjs";
@@ -9,7 +11,7 @@ const registerSchema = z.object({
   password: z.string().min(8, "كلمة المرور 8 أحرف على الأقل"),
 });
 
-export async function POST(request: Request) {
+export const POST = withApiHandler("v1.auth.register", async (request: Request) => {
   let body: unknown;
   try {
     body = await request.json();
@@ -44,12 +46,14 @@ export async function POST(request: Request) {
     });
     await repo.save(user);
 
+    await logger.event("user.registered", { userId: user.id, email: user.email });
+
     return jsonSuccess({
       id: user.id,
       email: user.email,
     });
   } catch (e) {
-    console.error("[register]", e);
+    await logger.error("auth.register_failed", { error: String(e) });
     return jsonError("SERVER_ERROR", "تعذّر إنشاء الحساب", 500);
   }
-}
+});

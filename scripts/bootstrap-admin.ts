@@ -2,6 +2,7 @@
  * إنشاء المدير الافتراضي من .env
  * التشغيل: npm run bootstrap:admin
  */
+import "reflect-metadata";
 import { loadEnvFile } from "./load-env";
 
 loadEnvFile();

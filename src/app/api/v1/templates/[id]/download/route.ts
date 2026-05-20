@@ -1,4 +1,6 @@
+import { withApiHandler } from "@/lib/api-route";
 import { jsonError } from "@/lib/api-response";
+import { logger } from "@/lib/logger";
 import { requireDatabaseConfigured } from "@/lib/api-db-guard";
 import { auth } from "@/auth";
 import { purchaseAccessStatusIn } from "@/lib/purchase-access";
@@ -24,10 +26,9 @@ function mimeFromName(filePath: string): string {
   return "application/octet-stream";
 }
 
-export async function GET(
-  _request: Request,
-  context: { params: Promise<{ id: string }> },
-) {
+export const GET = withApiHandler(
+  "v1.templates.download",
+  async (_request: Request, context: { params: Promise<{ id: string }> }) => {
   const { id } = await context.params;
   if (!idSchema.safeParse(id).success) {
     return jsonError("VALIDATION_ERROR", "معرّف غير صالح", 422);
@@ -79,7 +80,8 @@ export async function GET(
       },
     });
   } catch (e) {
-    console.error("[download]", e);
+    await logger.error("templates.download_failed", { error: String(e) });
     return jsonError("SERVER_ERROR", "تعذّر التحميل", 500);
   }
-}
+  },
+);

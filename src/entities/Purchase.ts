@@ -25,14 +25,14 @@ export class Purchase {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
-  @Column({ name: "user_id" })
+  @Column({ name: "user_id", type: "uuid" })
   userId!: string;
 
   @ManyToOne(() => User, { onDelete: "CASCADE" })
   @JoinColumn({ name: "user_id" })
   user!: User;
 
-  @Column({ name: "template_id" })
+  @Column({ name: "template_id", type: "uuid" })
   templateId!: string;
 
   @ManyToOne(() => Template, { onDelete: "CASCADE" })

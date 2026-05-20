@@ -1,8 +1,10 @@
+import { withApiHandler } from "@/lib/api-route";
 import { jsonError, jsonSuccess } from "@/lib/api-response";
+import { logger } from "@/lib/logger";
 import { requireDatabaseConfigured } from "@/lib/api-db-guard";
 import { getCategoryRepository } from "@/lib/db";
 
-export async function GET() {
+export const GET = withApiHandler("v1.categories.list", async () => {
   const dbCheck = requireDatabaseConfigured();
   if (!dbCheck.ok) return dbCheck.response;
 
@@ -19,7 +21,7 @@ export async function GET() {
       })),
     );
   } catch (e) {
-    console.error("[categories]", e);
+    await logger.error("categories.list_failed", { error: String(e) });
     return jsonError("SERVER_ERROR", "تعذّر تحميل الفئات", 500);
   }
-}
+});
