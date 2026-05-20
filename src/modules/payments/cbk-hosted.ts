@@ -1,5 +1,6 @@
 import type { CbkCredentials } from "./cbk-config";
 import { resolveCbkPaymentStatus } from "./cbk-errors";
+import { cbkHttpCall } from "./cbk-http-call";
 import { cbkBasicAuthHeader, createCbkHttpClient } from "./cbk-http";
 import { logPaymentError } from "./payment-error-log";
 import { cbkSingleFlightToken } from "./cbk-singleflight";
@@ -45,26 +46,30 @@ interface CbkAuthResponse {
 async function cbkAuthenticate(creds: CbkCredentials): Promise<string> {
   const http = createCbkHttpClient(creds);
   const authHeaders = cbkBasicAuthHeader(creds.clientId, creds.clientSecret);
+  const body = {
+    ClientId: creds.clientId,
+    ClientSecret: creds.clientSecret,
+    ENCRP_KEY: creds.encrpKey,
+  };
 
   try {
-    const res = await http.post<CbkAuthResponse>(
-      CBK_ENDPOINTS.AUTH,
-      {
-        ClientId: creds.clientId,
-        ClientSecret: creds.clientSecret,
-        ENCRP_KEY: creds.encrpKey,
-      },
-      { headers: authHeaders },
-    );
+    const { data: json, status } = await cbkHttpCall<CbkAuthResponse>({
+      operation: "authenticate",
+      creds,
+      http,
+      method: "POST",
+      path: CBK_ENDPOINTS.AUTH,
+      body,
+      headers: authHeaders,
+    });
 
-    const json = res.data;
     if (json.Status !== "1" || !json.AccessToken) {
-      const msg = json.Message ?? `HTTP ${res.status}`;
+      const msg = json.Message ?? `HTTP ${status}`;
       await logPaymentError({
         phase: "authenticate",
         gatewayStatus: json.Status,
         gatewayMessage: msg,
-        httpStatus: res.status,
+        httpStatus: status,
         raw: json as unknown as Record<string, unknown>,
       });
       throw new Error(`فشل توثيق CBK: ${msg}`);
@@ -75,12 +80,14 @@ async function cbkAuthenticate(creds: CbkCredentials): Promise<string> {
       e && typeof e === "object" && "message" in e
         ? String((e as { message: string }).message)
         : String(e);
-    await logPaymentError({
-      phase: "authenticate",
-      code: "SERVER",
-      gatewayMessage: axiosMsg,
-      error: e,
-    });
+    if (!(e instanceof Error && e.message.startsWith("فشل توثيق CBK"))) {
+      await logPaymentError({
+        phase: "authenticate",
+        code: "SERVER",
+        gatewayMessage: axiosMsg,
+        error: e,
+      });
+    }
     throw new Error(`فشل الاتصال ببوابة CBK: ${axiosMsg}`);
   }
 }
@@ -106,15 +113,20 @@ export async function cbkGetTransactions(
 ): Promise<CbkTransactionDetails> {
   const http = createCbkHttpClient(creds);
   const authHeaders = cbkBasicAuthHeader(creds.clientId, creds.clientSecret);
+  const path = `${CBK_ENDPOINTS.GET_TRANSACTIONS}/${encodeURIComponent(encrp)}/${encodeURIComponent(accessToken)}`;
 
   try {
-    const res = await http.get<CbkTransactionDetails>(
-      `${CBK_ENDPOINTS.GET_TRANSACTIONS}/${encodeURIComponent(encrp)}/${encodeURIComponent(accessToken)}`,
-      { headers: authHeaders },
-    );
+    const { data: json, status } = await cbkHttpCall<CbkTransactionDetails>({
+      operation: "get_transactions",
+      creds,
+      http,
+      method: "GET",
+      path,
+      headers: authHeaders,
+      meta: { encrpLength: encrp.length },
+    });
 
-    const json = res.data;
-    if (res.status === 401) {
+    if (status === 401) {
       clearCachedCbkAccessToken(cbkTokenCacheKey(creds.clientId));
     }
     if (json.Status && json.Status !== "1") {
@@ -150,20 +162,25 @@ export async function cbkVerifyByTrackId(
 ): Promise<CbkTransactionDetails> {
   const http = createCbkHttpClient(creds);
   const authHeaders = cbkBasicAuthHeader(creds.clientId, creds.clientSecret);
+  const body = {
+    encrypmerch: creds.encrpKey,
+    authkey: accessToken,
+    payid: payId,
+  };
 
   try {
-    const res = await http.post<CbkTransactionDetails>(
-      CBK_ENDPOINTS.VERIFY,
-      {
-        encrypmerch: creds.encrpKey,
-        authkey: accessToken,
-        payid: payId,
-      },
-      { headers: authHeaders },
-    );
+    const { data: json, status } = await cbkHttpCall<CbkTransactionDetails>({
+      operation: "verify",
+      creds,
+      http,
+      method: "POST",
+      path: CBK_ENDPOINTS.VERIFY,
+      body,
+      headers: authHeaders,
+      meta: { payId },
+    });
 
-    const json = res.data;
-    if (res.status === 401) {
+    if (status === 401) {
       clearCachedCbkAccessToken(cbkTokenCacheKey(creds.clientId));
     }
     if (json.Status && json.Status !== "1") {

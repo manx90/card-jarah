@@ -15,6 +15,7 @@ import {
   getCbkAccessToken,
 } from "@/modules/payments/cbk-hosted";
 import { logPaymentError } from "@/modules/payments/payment-error-log";
+import { logPaymentProviderExchange } from "@/modules/payments/payment-provider-log";
 import {
   getPurchaseRepository,
   getTemplateRepository,
@@ -120,6 +121,35 @@ export const POST = withApiHandler("v1.purchases.checkout", async (request: Requ
     });
 
     const actionUrl = buildCbkCheckoutActionUrl(creds, accessToken);
+
+    await logPaymentProviderExchange({
+      operation: "checkout_form",
+      request: {
+        method: "POST",
+        url: actionUrl,
+        body: {
+          note: "نموذج POST إلى صفحة CBK المستضافة — يُرسل من المتصفح",
+          fields,
+          returnUrl,
+          amount,
+          paymentTrack: track,
+        },
+      },
+      response: {
+        httpStatus: 200,
+        durationMs: 0,
+        body: {
+          note: "لا استجابة HTTP — التوجيه يتم من المتصفح إلى CBK",
+          purchaseId: purchase.id,
+          trackId: track,
+        },
+      },
+      meta: {
+        userId: session.user.id,
+        templateId,
+        purchaseId: purchase.id,
+      },
+    });
 
     await logger.event("payment.checkout_started", {
       purchaseId: purchase.id,
