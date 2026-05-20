@@ -5,7 +5,7 @@ import { requireDatabaseConfigured } from "@/lib/api-db-guard";
 import { auth } from "@/auth";
 import {
   getCbkCredentials,
-  getAppPublicBaseUrl,
+  getCbkReturnUrl,
   isCbkPaymentConfigured,
 } from "@/modules/payments/cbk-config";
 import {
@@ -109,8 +109,7 @@ export const POST = withApiHandler("v1.purchases.checkout", async (request: Requ
 
     const accessToken = await getCbkAccessToken(creds);
     const amount = formatCbkAmountKuwaitStyle(template.price);
-    const base = getAppPublicBaseUrl();
-    const returnUrl = `${base}/api/v1/payments/cbk/return`;
+    const returnUrl = getCbkReturnUrl();
 
     const fields = buildCbkCheckoutFormFields(creds, accessToken, {
       amount,

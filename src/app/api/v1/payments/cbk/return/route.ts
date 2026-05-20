@@ -18,7 +18,10 @@ import {
   validateCbkPaidAmount,
 } from "@/modules/payments/cbk-return";
 import { logPaymentError } from "@/modules/payments/payment-error-log";
-import { clearCachedCbkAccessToken } from "@/modules/payments/cbk-token-cache";
+import {
+  cbkTokenCacheKey,
+  clearCachedCbkAccessToken,
+} from "@/modules/payments/cbk-token-cache";
 import { NextResponse } from "next/server";
 
 function redirectTo(pathWithQuery: string) {
@@ -123,7 +126,7 @@ export const GET = withApiHandler("v1.payments.cbk.return", async (request: Requ
       (details.Message?.toLowerCase().includes("invalid") &&
         details.Status !== "1")
     ) {
-      clearCachedCbkAccessToken();
+      clearCachedCbkAccessToken(cbkTokenCacheKey(creds.clientId));
       details = await fetchDetails();
     }
 
@@ -165,7 +168,7 @@ export const GET = withApiHandler("v1.payments.cbk.return", async (request: Requ
 
     const payId = details.PayId?.trim() ?? details.TrackId?.trim() ?? "";
     if (payId) {
-      clearCachedCbkAccessToken();
+      clearCachedCbkAccessToken(cbkTokenCacheKey(creds.clientId));
       const token2 = await getCbkAccessToken(creds);
       const v = await cbkVerifyByTrackId(creds, payId, token2);
       const st = purchaseStatusFromCbk(v);

@@ -12,9 +12,17 @@ export interface CbkCredentials {
   payType: "" | "1" | "2";
 }
 
+function resolveCbkBaseUrl(): string {
+  return (
+    process.env.CBK_PG_BASE_URL?.trim() ||
+    process.env.CBK_BASE_URL?.trim() ||
+    ""
+  );
+}
+
 export function isCbkPaymentConfigured(): boolean {
   return !!(
-    process.env.CBK_PG_BASE_URL?.trim() &&
+    resolveCbkBaseUrl() &&
     process.env.CBK_CLIENT_ID?.trim() &&
     process.env.CBK_CLIENT_SECRET?.trim() &&
     process.env.CBK_ENCRP_KEY?.trim()
@@ -23,7 +31,7 @@ export function isCbkPaymentConfigured(): boolean {
 
 export function getCbkCredentials(): CbkCredentials {
   if (!isCbkPaymentConfigured()) {
-    throw new Error("إعدادات CBK غير مكتملة (CBK_PG_BASE_URL وغيرها)");
+    throw new Error("إعدادات CBK غير مكتملة (CBK_PG_BASE_URL / CBK_BASE_URL وغيرها)");
   }
   const cur = (process.env.CBK_CURRENCY ?? "KWD").trim().toUpperCase();
   const langRaw = (process.env.CBK_PAYMENT_LANG ?? "ar").trim().toLowerCase();
@@ -33,7 +41,7 @@ export function getCbkCredentials(): CbkCredentials {
     payRaw === "1" || payRaw === "2" ? (payRaw as "1" | "2") : "";
 
   return {
-    pgBaseUrl: trimBase(process.env.CBK_PG_BASE_URL!.trim()),
+    pgBaseUrl: trimBase(resolveCbkBaseUrl()),
     clientId: process.env.CBK_CLIENT_ID!.trim(),
     clientSecret: process.env.CBK_CLIENT_SECRET!.trim(),
     encrpKey: process.env.CBK_ENCRP_KEY!.trim(),
@@ -53,4 +61,11 @@ export function getAppPublicBaseUrl(): string {
     throw new Error("عيّن APP_URL أو NEXT_PUBLIC_APP_URL لرابط العودة من البوابة");
   }
   return trimBase(raw);
+}
+
+/** رابط عودة CBK — CBK_RETURN_URL أو APP_URL + مسار الإرجاع */
+export function getCbkReturnUrl(): string {
+  const explicit = process.env.CBK_RETURN_URL?.trim();
+  if (explicit) return trimBase(explicit);
+  return `${getAppPublicBaseUrl()}/api/v1/payments/cbk/return`;
 }
