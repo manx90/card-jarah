@@ -15,7 +15,8 @@ import {
 import { cn } from "@/lib/utils";
 import { Home, LayoutGrid, LogIn, LogOut, Menu, Shield, UserPlus } from "lucide-react";
 import Link from "next/link";
-import { signOut, useSession } from "next-auth/react";
+import { signOutToHome } from "@/lib/client-sign-out";
+import { useSession } from "next-auth/react";
 import { ThemeToggle } from "./theme-toggle";
 
 const navLinkClass =
@@ -143,7 +144,7 @@ export function SiteHeader() {
                       type="button"
                       variant="outline"
                       className="w-full gap-2"
-                      onClick={() => void signOut({ callbackUrl: "/" })}
+                      onClick={() => void signOutToHome()}
                     >
                       <LogOut className="size-4" aria-hidden />
                       تسجيل الخروج
@@ -189,7 +190,7 @@ export function SiteHeader() {
                   variant="outline"
                   size="sm"
                   className="gap-1.5 border-border/80 shadow-none"
-                  onClick={() => signOut({ callbackUrl: "/" })}
+                  onClick={() => void signOutToHome()}
                 >
                   <LogOut className="size-3.5" aria-hidden />
                   <span className="hidden sm:inline">خروج</span>
