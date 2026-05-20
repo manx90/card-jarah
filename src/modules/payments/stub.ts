@@ -1,6 +1,5 @@
 /**
- * طبقة دفع مجردة — استبدل التنفيذ لاحقاً بـ Stripe أو Tap مع webhooks.
- * حالياً الشراء يتم عبر مسار mock منفصل.
+ * طبقة دفع مجردة — التنفيذ الحقيقي: `modules/payments/cbk-*` ومسار checkout.
  */
 export interface CheckoutInput {
   userId: string;

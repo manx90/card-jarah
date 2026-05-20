@@ -5,21 +5,40 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+function submitPostForm(actionUrl: string, fields: Record<string, string>) {
+  const form = document.createElement("form");
+  form.method = "POST";
+  form.action = actionUrl;
+  form.acceptCharset = "UTF-8";
+  form.style.display = "none";
+  for (const [name, value] of Object.entries(fields)) {
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = name;
+    input.value = value;
+    form.appendChild(input);
+  }
+  document.body.appendChild(form);
+  form.submit();
+}
+
 export function TemplateDetailActions({
   templateId,
   purchased,
   isLoggedIn,
+  cbkEnabled,
 }: {
   templateId: string;
   purchased: boolean;
   isLoggedIn: boolean;
+  cbkEnabled: boolean;
 }) {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const [busy, setBusy] = useState<"mock" | "cbk" | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function mockPurchase() {
-    setLoading(true);
+    setBusy("mock");
     setError(null);
     try {
       const res = await fetch("/api/v1/purchases/mock", {
@@ -39,7 +58,33 @@ export function TemplateDetailActions({
     } catch {
       setError("خطأ في الشبكة");
     } finally {
-      setLoading(false);
+      setBusy(null);
+    }
+  }
+
+  async function cbkCheckout() {
+    setBusy("cbk");
+    setError(null);
+    try {
+      const res = await fetch("/api/v1/purchases/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ templateId }),
+      });
+      const json = (await res.json()) as {
+        success?: boolean;
+        data?: { actionUrl: string; fields: Record<string, string> };
+        error?: { message?: string };
+      };
+      if (!res.ok || !json.success || !json.data) {
+        setError(json.error?.message ?? "تعذّر بدء الدفع");
+        return;
+      }
+      submitPostForm(json.data.actionUrl, json.data.fields);
+    } catch {
+      setError("خطأ في الشبكة");
+    } finally {
+      setBusy(null);
     }
   }
 
@@ -61,13 +106,24 @@ export function TemplateDetailActions({
 
   return (
     <div className="flex w-full flex-col gap-2 sm:flex-1">
+      {cbkEnabled ? (
+        <Button
+          type="button"
+          className="w-full"
+          disabled={busy !== null}
+          onClick={() => void cbkCheckout()}
+        >
+          {busy === "cbk" ? "توجيه لبوابة الدفع…" : "الدفع عبر البوابة (KNET / T-Pay)"}
+        </Button>
+      ) : null}
       <Button
         type="button"
+        variant={cbkEnabled ? "outline" : "default"}
         className="w-full"
-        disabled={loading}
+        disabled={busy !== null}
         onClick={() => void mockPurchase()}
       >
-        {loading ? "جاري الشراء…" : "شراء (وهمي)"}
+        {busy === "mock" ? "جاري الشراء…" : "شراء وهمي (تجربة)"}
       </Button>
       {error && (
         <p className="text-destructive text-center text-xs">{error}</p>

@@ -11,10 +11,16 @@ import {
 import { Template } from "./Template";
 import { User } from "./User";
 
-export type PurchaseStatus = "mock_completed" | "pending_payment";
+export type PurchaseStatus =
+  | "mock_completed"
+  | "pending_payment"
+  | "paid"
+  | "payment_failed"
+  | "payment_cancelled";
 
 @Entity("purchases")
 @Index(["userId", "templateId"], { unique: true })
+@Index(["paymentTrackId"], { unique: true })
 export class Purchase {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
@@ -35,6 +41,16 @@ export class Purchase {
 
   @Column({ type: "varchar", length: 40, default: "mock_completed" })
   status!: PurchaseStatus;
+
+  /** معرّف تتبع فريد لكل محاولة دفع (حد البوابة 30 حرفاً أبجدياً رقماً) */
+  @Column({ name: "payment_track_id", type: "varchar", length: 30, nullable: true })
+  paymentTrackId!: string | null;
+
+  @Column({ name: "payment_provider", type: "varchar", length: 24, nullable: true })
+  paymentProvider!: string | null;
+
+  @Column({ name: "payment_meta", type: "simple-json", nullable: true })
+  paymentMeta!: Record<string, unknown> | null;
 
   @CreateDateColumn({ name: "created_at", type: "timestamptz" })
   createdAt!: Date;

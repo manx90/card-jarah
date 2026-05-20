@@ -1,9 +1,11 @@
 import { MissingDatabaseNotice } from "@/components/setup/missing-database";
 import { auth } from "@/auth";
+import { purchaseAccessStatusIn } from "@/lib/purchase-access";
 import {
   getPurchaseRepository,
   getTemplateRepository,
 } from "@/lib/db";
+import { isCbkPaymentConfigured } from "@/modules/payments/cbk-config";
 import { isDatabaseConfigured } from "@/lib/db-config";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,10 +23,13 @@ export const dynamic = "force-dynamic";
 
 export default async function TemplateDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<{ payment?: string; code?: string; status?: string }>;
 }) {
   const { id } = await params;
+  const sp = searchParams ? await searchParams : {};
 
   if (!isDatabaseConfigured()) {
     return (
@@ -47,12 +52,22 @@ export default async function TemplateDetailPage({
       where: {
         userId: session.user.id,
         templateId: id,
-        status: "mock_completed",
+        status: purchaseAccessStatusIn(),
       },
     });
   }
 
   const previewUrl = `/api/v1/templates/${template.id}/preview`;
+
+  const paymentNotice =
+    sp.payment === "success"
+      ? { kind: "ok" as const, text: "تم الدفع بنجاح — يمكنك التحميل والتخصيص." }
+      : sp.payment === "error"
+        ? {
+            kind: "err" as const,
+            text: `تعذّر إتمام الدفع${sp.code ? ` (${sp.code})` : ""}${sp.status ? ` — حالة ${sp.status}` : ""}.`,
+          }
+        : null;
 
   return (
     <div className="mx-auto w-full min-w-0 max-w-4xl flex-1 px-4 py-8 sm:px-6">
@@ -87,6 +102,17 @@ export default async function TemplateDetailPage({
               </p>
             )}
             <p className="text-lg font-semibold">{template.price} ر.س</p>
+            {paymentNotice && (
+              <p
+                className={
+                  paymentNotice.kind === "ok"
+                    ? "text-sm text-emerald-600 dark:text-emerald-400"
+                    : "text-destructive text-sm"
+                }
+              >
+                {paymentNotice.text}
+              </p>
+            )}
           </CardContent>
           <CardFooter className="flex flex-col gap-2 sm:gap-3 md:flex-row md:flex-wrap">
             <Button variant="outline" className="w-full shrink-0 md:min-w-[8rem] md:flex-1" asChild>
@@ -97,6 +123,7 @@ export default async function TemplateDetailPage({
                 templateId={template.id}
                 purchased={purchased}
                 isLoggedIn={!!session}
+                cbkEnabled={isCbkPaymentConfigured()}
               />
             </div>
             {session && (

@@ -1,5 +1,6 @@
 import { MissingDatabaseNotice } from "@/components/setup/missing-database";
 import { auth } from "@/auth";
+import { purchaseAccessStatusIn } from "@/lib/purchase-access";
 import {
   getPurchaseRepository,
   getTemplateRepository,
@@ -41,7 +42,7 @@ export default async function CustomizePage({
     where: {
       userId: session.user.id,
       templateId: id,
-      status: "mock_completed",
+      status: purchaseAccessStatusIn(),
     },
   });
 

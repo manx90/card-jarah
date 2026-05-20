@@ -5,6 +5,7 @@ import {
   bufferWithWatermark,
   contentTypeForSourcePath,
 } from "@/lib/image-watermark";
+import { purchaseAccessStatusIn } from "@/lib/purchase-access";
 import { getPurchaseRepository, getTemplateRepository } from "@/lib/db";
 import { absoluteUploadPath } from "@/lib/storage";
 import { readFile } from "fs/promises";
@@ -50,7 +51,7 @@ export async function GET(
         where: {
           userId: session.user.id,
           templateId: id,
-          status: "mock_completed",
+          status: purchaseAccessStatusIn(),
         },
       });
       showClean = purchased;

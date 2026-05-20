@@ -1,6 +1,7 @@
 import { jsonError } from "@/lib/api-response";
 import { requireDatabaseConfigured } from "@/lib/api-db-guard";
 import { auth } from "@/auth";
+import { purchaseAccessStatusIn } from "@/lib/purchase-access";
 import {
   getPurchaseRepository,
   getTemplateRepository,
@@ -45,7 +46,7 @@ export async function GET(
       where: {
         userId: session.user.id,
         templateId: id,
-        status: "mock_completed",
+        status: purchaseAccessStatusIn(),
       },
     });
     if (!purchased) {

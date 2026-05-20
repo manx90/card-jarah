@@ -1,0 +1,8 @@
+PHP Test Code
+-------------
+
+1) Modify the files variables with merchant provided credentials
+
+2) Update the payment data "PG-Payment-Request-Hosted.php" to test a payment request generated at bank hosted page.
+
+3) The parameter received in the return URL is used with "PG-Payment-Result-Hosted.php" to receive transaction results data.
