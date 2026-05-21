@@ -242,7 +242,7 @@ export function buildCbkCheckoutFormFields(
       ? input.paymentRef.slice(0, 30)
       : "Purchase";
 
-  return {
+  const fields: Record<string, string> = {
     tij_MerchantEncryptCode: creds.encrpKey,
     tij_MerchAuthKeyApi: accessToken,
     tij_MerchantPaymentLang: creds.paymentLang,
@@ -250,14 +250,23 @@ export function buildCbkCheckoutFormFields(
     tij_MerchantPaymentTrack: input.paymentTrack,
     tij_MerchantPaymentRef: ref,
     tij_MerchantPaymentCurrency: creds.currency,
-    tij_MerchantUdf1: input.udf1 ?? "",
-    tij_MerchantUdf2: input.udf2 ?? "",
-    tij_MerchantUdf3: input.udf3 ?? "",
-    tij_MerchantUdf4: input.udf4 ?? "",
-    tij_MerchantUdf5: input.udf5 ?? "",
     tij_MerchPayType: creds.payType,
     tij_MerchReturnUrl: input.returnUrl,
   };
+
+  const udfPairs: [string, string | undefined][] = [
+    ["tij_MerchantUdf1", input.udf1],
+    ["tij_MerchantUdf2", input.udf2],
+    ["tij_MerchantUdf3", input.udf3],
+    ["tij_MerchantUdf4", input.udf4],
+    ["tij_MerchantUdf5", input.udf5],
+  ];
+  for (const [name, value] of udfPairs) {
+    const trimmed = value?.trim();
+    if (trimmed) fields[name] = trimmed;
+  }
+
+  return fields;
 }
 
 export function mapCbkGatewayStatus(

@@ -13,10 +13,12 @@ export async function findPurchaseForCbkResult(
   details: CbkTransactionDetails,
   payTrackFromQuery?: string | null,
 ): Promise<Purchase | null> {
-  const purchaseId = details.MerchUdf1?.trim();
-  if (purchaseId) {
-    const byId = await repo.findOne({ where: { id: purchaseId } });
+  const udf1 = details.MerchUdf1?.trim();
+  if (udf1) {
+    const byId = await repo.findOne({ where: { id: udf1 } });
     if (byId) return byId;
+    const byTrack = await repo.findOne({ where: { paymentTrackId: udf1 } });
+    if (byTrack) return byTrack;
   }
 
   const trackKey =

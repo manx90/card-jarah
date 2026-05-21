@@ -117,7 +117,6 @@ export const POST = withApiHandler("v1.purchases.checkout", async (request: Requ
       paymentTrack: track,
       returnUrl,
       paymentRef: template.title.slice(0, 30),
-      udf1: purchase.id,
     });
 
     const actionUrl = buildCbkCheckoutActionUrl(creds, accessToken);
