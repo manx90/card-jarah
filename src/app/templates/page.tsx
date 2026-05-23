@@ -1,4 +1,6 @@
+import { PageHero } from "@/components/layout/page-hero";
 import { MissingDatabaseNotice } from "@/components/setup/missing-database";
+import { TemplatesGridSkeleton } from "@/components/templates/templates-grid-skeleton";
 import {
   getCategoryRepository,
   getTemplateRepository,
@@ -47,12 +49,13 @@ export default async function TemplatesPage({
       : null;
 
   return (
-    <div className="mx-auto w-full min-w-0 max-w-6xl flex-1 px-4 py-8 sm:px-6">
-      <h1 className="mb-2 break-words text-2xl font-bold">القوالب</h1>
-      <p className="text-muted-foreground mb-8 text-sm">
-        معاينة بعلامة مائية؛ التحميل الكامل بعد الشراء.
-      </p>
-      <Suspense fallback={<p className="text-muted-foreground py-8 text-center">تحميل…</p>}>
+    <main className="mx-auto w-full min-w-0 max-w-6xl flex-1 px-4 py-6 sm:px-6 sm:py-8">
+      <PageHero
+        eyebrow="المتجر"
+        title="قوالب بطاقات التهنئة"
+        description="معاينة بعلامة مائية — التحميل الكامل والتخصيص بعد الشراء."
+      />
+      <Suspense fallback={<TemplatesGridSkeleton />}>
         <TemplatesBrowser
           categories={categories.map((c) => ({
             id: c.id,
@@ -72,6 +75,6 @@ export default async function TemplatesPage({
           selectedCategoryName={selectedCategoryName}
         />
       </Suspense>
-    </div>
+    </main>
   );
 }

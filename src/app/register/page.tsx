@@ -1,10 +1,18 @@
+import { AuthPageShell } from "@/components/auth/auth-page-shell";
+import { Card, CardContent } from "@/components/ui/card";
 import { RegisterForm } from "./register-form";
 
 export default function RegisterPage() {
   return (
-    <div className="mx-auto flex max-w-md flex-1 flex-col justify-center px-4 py-12">
-      <h1 className="mb-6 text-center text-2xl font-bold">إنشاء حساب</h1>
-      <RegisterForm />
-    </div>
+    <AuthPageShell
+      title="إنشاء حساب"
+      description="أنشئ حساباً جديداً للشراء وتخصيص بطاقات التهنئة"
+    >
+      <Card className="border-border/60 shadow-sm">
+        <CardContent className="pt-6">
+          <RegisterForm />
+        </CardContent>
+      </Card>
+    </AuthPageShell>
   );
 }

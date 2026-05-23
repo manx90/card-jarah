@@ -54,7 +54,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           await logger.auth("login.success", { email, role: user.role });
           return {
             id: user.id,
-            name: user.email,
+            name: user.name?.trim() || user.email,
             email: user.email,
             role: user.role as UserRole,
           };

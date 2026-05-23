@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { CreditCard, Download, LogIn } from "lucide-react";
 import { useState } from "react";
 
 function submitPostForm(actionUrl: string, fields: Record<string, string>) {
@@ -90,29 +91,37 @@ export function TemplateDetailActions({
 
   if (!isLoggedIn) {
     return (
-      <Button className="w-full sm:flex-1" asChild>
-        <Link href={`/login?callbackUrl=/templates/${templateId}`}>سجّل للشراء</Link>
+      <Button className="w-full gap-2" size="lg" asChild>
+        <Link href={`/login?callbackUrl=/templates/${templateId}`}>
+          <LogIn className="size-4" aria-hidden />
+          سجّل للشراء
+        </Link>
       </Button>
     );
   }
 
   if (purchased) {
     return (
-      <Button className="w-full sm:flex-1" asChild>
-        <a href={`/api/v1/templates/${templateId}/download`}>تحميل بدون علامة</a>
+      <Button className="w-full gap-2" size="lg" asChild>
+        <a href={`/api/v1/templates/${templateId}/download`}>
+          <Download className="size-4" aria-hidden />
+          تحميل بدون علامة مائية
+        </a>
       </Button>
     );
   }
 
   return (
-    <div className="flex w-full flex-col gap-2 sm:flex-1">
+    <div className="flex w-full flex-col gap-2">
       {cbkEnabled ? (
         <Button
           type="button"
-          className="w-full"
+          className="w-full gap-2"
+          size="lg"
           disabled={busy !== null}
           onClick={() => void cbkCheckout()}
         >
+          <CreditCard className="size-4" aria-hidden />
           {busy === "cbk" ? "توجيه لبوابة الدفع…" : "الدفع عبر البوابة (KNET / T-Pay)"}
         </Button>
       ) : null}
@@ -120,6 +129,7 @@ export function TemplateDetailActions({
         type="button"
         variant={cbkEnabled ? "outline" : "default"}
         className="w-full"
+        size="lg"
         disabled={busy !== null}
         onClick={() => void mockPurchase()}
       >

@@ -1,4 +1,6 @@
 import { MissingDatabaseNotice } from "@/components/setup/missing-database";
+import { TemplatePreviewImage } from "@/components/templates/template-preview-image";
+import { WatermarkOverlay } from "@/components/templates/watermark-overlay";
 import { auth } from "@/auth";
 import { purchaseAccessStatusIn } from "@/lib/purchase-access";
 import {
@@ -9,6 +11,7 @@ import { isCbkPaymentConfigured } from "@/modules/payments/cbk-config";
 import { formatPriceKwd } from "@/lib/currency";
 import { formatPaymentUserMessage } from "@/modules/payments/cbk-errors";
 import { isDatabaseConfigured } from "@/lib/db-config";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -17,6 +20,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { ArrowRight, Palette } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { TemplateDetailActions } from "./template-detail-actions";
@@ -77,55 +82,73 @@ export default async function TemplateDetailPage({
         : null;
 
   return (
-    <div className="mx-auto w-full min-w-0 max-w-4xl flex-1 px-4 py-8 sm:px-6">
-      <div className="grid min-w-0 gap-8 md:grid-cols-2 md:items-start">
-        <div className="bg-muted relative min-w-0 overflow-hidden rounded-xl border">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={previewUrl}
-            alt=""
-            className="block h-auto w-full max-w-full object-contain"
-          />
-          <div
-            className="pointer-events-none absolute inset-0 flex items-center justify-center"
-            aria-hidden
-          >
-            <span className="text-foreground/20 rotate-[-20deg] text-3xl font-bold tracking-widest sm:text-4xl">
-              معاينة
-            </span>
+    <main className="mx-auto w-full min-w-0 max-w-5xl flex-1 px-4 py-6 sm:px-6 sm:py-8">
+      <div className="mb-6">
+        <Button variant="ghost" size="sm" className="gap-2 px-2" asChild>
+          <Link href="/templates">
+            <ArrowRight className="size-4" aria-hidden />
+            العودة للقوالب
+          </Link>
+        </Button>
+      </div>
+
+      <div className="grid min-w-0 gap-6 lg:grid-cols-2 lg:items-start lg:gap-8">
+        <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-muted shadow-sm">
+          <div className="relative aspect-[4/3] w-full min-w-0 overflow-hidden sm:aspect-auto sm:min-h-[22rem]">
+            <TemplatePreviewImage
+              templateId={template.id}
+              previewUrl={previewUrl}
+              title={template.title}
+              className="size-full object-contain"
+            />
+            {!purchased && <WatermarkOverlay />}
           </div>
         </div>
-        <Card className="min-w-0">
-          <CardHeader>
-            <p className="text-muted-foreground text-sm">
-              {template.category?.nameAr}
-            </p>
-            <CardTitle className="break-words text-2xl">{template.title}</CardTitle>
+
+        <Card className="min-w-0 border-border/60 shadow-sm">
+          <CardHeader className="gap-3">
+            <div className="flex flex-wrap items-center gap-2">
+              {template.category?.nameAr && (
+                <Badge variant="secondary" className="">{template.category.nameAr}</Badge>
+              )}
+              {purchased && (
+                <Badge className="bg-emerald-600/90 hover:bg-emerald-600/90">مُشترى</Badge>
+              )}
+            </div>
+            <CardTitle className="break-words text-2xl leading-tight sm:text-3xl">
+              {template.title}
+            </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+
+          <CardContent className="space-y-5">
             {template.description && (
-              <p className="text-muted-foreground text-sm leading-relaxed">
+              <p className="text-muted-foreground text-sm leading-relaxed sm:text-base">
                 {template.description}
               </p>
             )}
-            <p className="text-lg font-semibold">{formatPriceKwd(template.price)}</p>
+
+            <Separator className="bg-border/60" />
+
+            <div className="flex items-baseline gap-2">
+              <span className="text-muted-foreground text-sm">السعر</span>
+              <p className="text-2xl font-bold text-primary">{formatPriceKwd(template.price)}</p>
+            </div>
+
             {paymentNotice && (
-              <p
+              <div
                 className={
                   paymentNotice.kind === "ok"
-                    ? "text-sm text-emerald-600 dark:text-emerald-400"
-                    : "text-destructive text-sm"
+                    ? "rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-300"
+                    : "bg-destructive/10 text-destructive rounded-xl border border-destructive/30 px-4 py-3 text-sm"
                 }
               >
                 {paymentNotice.text}
-              </p>
+              </div>
             )}
           </CardContent>
-          <CardFooter className="flex flex-col gap-2 sm:gap-3 md:flex-row md:flex-wrap">
-            <Button variant="outline" className="w-full shrink-0 md:min-w-[8rem] md:flex-1" asChild>
-              <Link href="/templates">رجوع</Link>
-            </Button>
-            <div className="w-full min-w-0 md:min-w-[10rem] md:flex-1">
+
+          <CardFooter className="flex flex-col gap-2 sm:gap-3">
+            <div className="w-full min-w-0">
               <TemplateDetailActions
                 templateId={template.id}
                 purchased={purchased}
@@ -133,14 +156,25 @@ export default async function TemplateDetailPage({
                 cbkEnabled={isCbkPaymentConfigured()}
               />
             </div>
-            {session && (
-              <Button className="w-full shrink-0 md:min-w-[8rem] md:flex-1" asChild>
-                <Link href={`/templates/${template.id}/customize`}>تخصيص</Link>
+            {session && purchased && (
+              <Button className="w-full gap-2" size="lg" asChild>
+                <Link href={`/templates/${template.id}/customize`}>
+                  <Palette className="size-4" aria-hidden />
+                  تخصيص البطاقة
+                </Link>
+              </Button>
+            )}
+            {!purchased && (
+              <Button className="w-full gap-2" variant="outline" size="lg" asChild>
+                <Link href={`/templates/${template.id}/customize`}>
+                  <Palette className="size-4" aria-hidden />
+                  تجربة المحرّر
+                </Link>
               </Button>
             )}
           </CardFooter>
         </Card>
       </div>
-    </div>
+    </main>
   );
 }

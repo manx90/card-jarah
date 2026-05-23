@@ -3,13 +3,8 @@ import { jsonError, jsonSuccess } from "@/lib/api-response";
 import { logger } from "@/lib/logger";
 import { requireDatabaseConfigured } from "@/lib/api-db-guard";
 import { getUserRepository } from "@/lib/db";
+import { normalizePhone, registerBodySchema } from "@/lib/user-validation";
 import bcrypt from "bcryptjs";
-import { z } from "zod";
-
-const registerSchema = z.object({
-  email: z.string().email("بريد غير صالح"),
-  password: z.string().min(8, "كلمة المرور 8 أحرف على الأقل"),
-});
 
 export const POST = withApiHandler("v1.auth.register", async (request: Request) => {
   let body: unknown;
@@ -19,13 +14,13 @@ export const POST = withApiHandler("v1.auth.register", async (request: Request) 
     return jsonError("INVALID_JSON", "جسم الطلب ليس JSON", 400);
   }
 
-  const parsed = registerSchema.safeParse(body);
+  const parsed = registerBodySchema.safeParse(body);
   if (!parsed.success) {
     const msg = parsed.error.issues.map((i) => i.message).join("، ");
     return jsonError("VALIDATION_ERROR", msg, 422);
   }
 
-  const { email, password } = parsed.data;
+  const { name, email, password, phone } = parsed.data;
   const normalized = email.trim().toLowerCase();
 
   const dbCheck = requireDatabaseConfigured();
@@ -41,16 +36,23 @@ export const POST = withApiHandler("v1.auth.register", async (request: Request) 
     const passwordHash = await bcrypt.hash(password, 12);
     const user = repo.create({
       email: normalized,
+      name: name.trim(),
+      phone: normalizePhone(phone),
       passwordHash,
       role: "user",
     });
     await repo.save(user);
 
-    await logger.event("user.registered", { userId: user.id, email: user.email });
+    await logger.event("user.registered", {
+      userId: user.id,
+      email: user.email,
+      name: user.name,
+    });
 
     return jsonSuccess({
       id: user.id,
       email: user.email,
+      name: user.name,
     });
   } catch (e) {
     await logger.error("auth.register_failed", { error: String(e) });

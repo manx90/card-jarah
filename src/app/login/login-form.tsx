@@ -3,10 +3,11 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Loader2, Lock, Mail } from "lucide-react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useState, Suspense } from "react";
+import { Suspense, useState } from "react";
 
 function LoginFormInner() {
   const searchParams = useSearchParams();
@@ -27,34 +28,18 @@ function LoginFormInner() {
         password,
         redirect: false,
       });
-    } catch (err) {
+    } catch {
       setLoading(false);
-      console.error("[login] signIn threw:", err);
-      setError("حدث خطأ أثناء الدخول. راجع الطرفية والكونسول.");
+      setError("حدث خطأ أثناء الدخول. حاول مرة أخرى.");
       return;
     }
 
     setLoading(false);
-
-    /** NextAuth قد يُعيد `ok: true` مع `error: "CredentialsSignin"` عند فشل المصادقة — لا تعتمد على `ok` فقط */
     const authError = res?.error;
-    const loggedIn = !authError;
-
-    console.log("[login] signIn response (client):", {
-      note: "Success = no `error` field. Ignore `ok` when `error` is set (NextAuth quirk).",
-      loggedIn,
-      ok: res?.ok,
-      error: authError ?? null,
-      status: res?.status,
-      url: res?.url ?? null,
-      code: (res as { code?: string })?.code ?? null,
-      full: res,
-    });
-
-    if (!loggedIn) {
+    if (authError) {
       setError(
         authError === "CredentialsSignin"
-          ? "البريد أو كلمة المرور غير صحيحة، أو لا يوجد حساب بهذا البريد."
+          ? "البريد أو كلمة المرور غير صحيحة."
           : `فشل الدخول: ${authError}`,
       );
       return;
@@ -64,37 +49,56 @@ function LoginFormInner() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4 rounded-xl border bg-card p-6 shadow-sm">
+    <form onSubmit={onSubmit} className="space-y-5">
       <div className="space-y-2">
-        <Label htmlFor="email">البريد</Label>
-        <Input
-          id="email"
-          type="email"
-          autoComplete="email"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
+        <Label htmlFor="email">البريد الإلكتروني</Label>
+        <div className="relative">
+          <Mail className="text-muted-foreground pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2" aria-hidden />
+          <Input
+            id="email"
+            type="email"
+            autoComplete="email"
+            required
+            className="ps-9"
+            placeholder="name@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
       </div>
       <div className="space-y-2">
         <Label htmlFor="password">كلمة المرور</Label>
-        <Input
-          id="password"
-          type="password"
-          autoComplete="current-password"
-          required
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+        <div className="relative">
+          <Lock className="text-muted-foreground pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2" aria-hidden />
+          <Input
+            id="password"
+            type="password"
+            autoComplete="current-password"
+            required
+            className="ps-9"
+            placeholder="••••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </div>
       </div>
-      {error && <p className="text-destructive text-sm">{error}</p>}
-      <Button type="submit" className="w-full" disabled={loading}>
-        {loading ? "جاري الدخول…" : "دخول"}
+      {error && (
+        <p className="bg-destructive/10 text-destructive rounded-lg px-3 py-2 text-sm">{error}</p>
+      )}
+      <Button type="submit" className="w-full gap-2" size="lg" disabled={loading}>
+        {loading ? (
+          <>
+            <Loader2 className="size-4 animate-spin" aria-hidden />
+            جاري الدخول…
+          </>
+        ) : (
+          "دخول"
+        )}
       </Button>
       <p className="text-muted-foreground text-center text-sm">
         ليس لديك حساب؟{" "}
-        <Link href="/register" className="text-primary underline">
-          سجّل
+        <Link href="/register" className="text-primary font-medium hover:underline">
+          إنشاء حساب
         </Link>
       </p>
     </form>
@@ -103,7 +107,7 @@ function LoginFormInner() {
 
 export function LoginForm() {
   return (
-    <Suspense fallback={<p className="text-center text-sm">تحميل…</p>}>
+    <Suspense fallback={<p className="text-muted-foreground text-center text-sm">تحميل…</p>}>
       <LoginFormInner />
     </Suspense>
   );

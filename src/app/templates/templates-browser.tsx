@@ -1,17 +1,17 @@
 "use client";
 
 import { CategoryFilterChips } from "@/components/templates/category-filter-chips";
-import { TemplatePreviewImage } from "@/components/templates/template-preview-image";
+import { TemplateCard } from "@/components/templates/template-card";
 import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { formatPriceKwd } from "@/lib/currency";
-import Link from "next/link";
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import { LayoutGrid } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 interface CategoryItem {
@@ -39,7 +39,6 @@ export function TemplatesBrowser({
   categories: CategoryItem[];
   templates: TemplateItem[];
   selectedCategoryId: string | null;
-  /** اسم الفئة عند التصفية — للعرض فقط */
   selectedCategoryName: string | null;
 }) {
   const router = useRouter();
@@ -63,59 +62,43 @@ export function TemplatesBrowser({
       {selectedCategoryId && selectedCategoryName && (
         <p className="text-muted-foreground -mt-4 text-sm">
           عرض القوالب ضمن:{" "}
-          <span className="text-foreground font-medium">{selectedCategoryName}</span>
+          <span className="font-medium text-foreground">{selectedCategoryName}</span>
         </p>
       )}
 
-      <div className="grid min-w-0 flex-1 grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid min-w-0 flex-1 grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
         {templates.length === 0 ? (
-          <div className="text-muted-foreground col-span-full rounded-xl border border-dashed border-border/80 bg-muted/20 px-6 py-14 text-center">
-            <p className="font-medium text-foreground">لا توجد قوالب في هذا العرض</p>
-            <p className="mt-2 text-sm">
-              {selectedCategoryId
-                ? "جرّب فئة أخرى أو عرض الكل."
-                : "أضف قوالب من لوحة الإدارة."}
-            </p>
+          <Empty className="col-span-full border-border/80 bg-muted/20 py-16">
+            <EmptyHeader className="">
+              <EmptyMedia variant="icon" className="">
+                <LayoutGrid aria-hidden />
+              </EmptyMedia>
+              <EmptyTitle className="">لا توجد قوالب في هذا العرض</EmptyTitle>
+              <EmptyDescription className="">
+                {selectedCategoryId
+                  ? "جرّب فئة أخرى أو اعرض كل القوالب المتاحة."
+                  : "أضف قوالب من لوحة الإدارة لتظهر هنا."}
+              </EmptyDescription>
+            </EmptyHeader>
             {selectedCategoryId && (
-              <Button type="button" variant="outline" size="sm" className="mt-4" onClick={() => setCategory(null)}>
-                عرض كل القوالب
-              </Button>
+              <EmptyContent className="">
+                <Button type="button" variant="outline" size="sm" onClick={() => setCategory(null)}>
+                  عرض كل القوالب
+                </Button>
+              </EmptyContent>
             )}
-          </div>
+          </Empty>
         ) : (
           templates.map((t) => (
-            <Card key={t.id} className="min-w-0 overflow-hidden pt-0 transition-shadow hover:shadow-md">
-              <div className="bg-muted relative w-full min-w-0 overflow-hidden">
-                <TemplatePreviewImage
-                  templateId={t.id}
-                  previewUrl={t.previewUrl}
-                  title={t.title}
-                />
-                <div
-                  className="pointer-events-none absolute inset-0 flex items-center justify-center"
-                  aria-hidden
-                >
-                  <span className="text-foreground/20 rotate-[-24deg] text-2xl font-bold tracking-widest sm:text-3xl">
-                    معاينة
-                  </span>
-                </div>
-              </div>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base leading-tight">{t.title}</CardTitle>
-                <p className="text-muted-foreground text-xs">{t.categoryName}</p>
-              </CardHeader>
-              <CardContent className="pb-2">
-                {t.description && (
-                  <p className="text-muted-foreground line-clamp-2 text-sm">{t.description}</p>
-                )}
-                <p className="mt-2 text-sm font-semibold">{formatPriceKwd(t.price)}</p>
-              </CardContent>
-              <CardFooter className="gap-2 pt-0">
-                <Button size="sm" className="flex-1" asChild>
-                  <Link href={`/templates/${t.id}`}>التفاصيل</Link>
-                </Button>
-              </CardFooter>
-            </Card>
+            <TemplateCard
+              key={t.id}
+              id={t.id}
+              title={t.title}
+              description={t.description}
+              price={t.price}
+              categoryName={t.categoryName}
+              previewUrl={t.previewUrl}
+            />
           ))
         )}
       </div>

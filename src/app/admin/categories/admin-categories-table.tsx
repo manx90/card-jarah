@@ -190,8 +190,9 @@ export function AdminCategoriesTable({
               <Input id="c-name" name="nameAr" required placeholder="عيد" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="c-thumb">صورة الغلاف (اختياري)</Label>
-              <Input id="c-thumb" name="thumbnail" type="file" accept="image/*" />
+              <Label htmlFor="c-thumb">صورة الغلاف *</Label>
+              <Input id="c-thumb" name="thumbnail" type="file" accept="image/*" required />
+              <p className="text-muted-foreground text-xs">مطلوب — PNG/JPG/WebP، 200×200 بكسل على الأقل</p>
             </div>
             <DialogFooter className="gap-2 sm:justify-end">
               <Button type="button" variant="outline" onClick={() => setOpenCreate(false)}>
@@ -233,8 +234,17 @@ export function AdminCategoriesTable({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="e-thumb">صورة جديدة (اختياري)</Label>
+                <Label htmlFor="e-thumb">صورة جديدة</Label>
                 <Input id="e-thumb" name="thumbnail" type="file" accept="image/*" />
+                <p className="text-muted-foreground text-xs">
+                  اترك فارغاً للإبقاء على الصورة الحالية
+                </p>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={editing.imageUrl}
+                  alt=""
+                  className="mt-2 size-20 rounded-md border object-cover"
+                />
               </div>
               <DialogFooter className="gap-2 sm:justify-end">
                 <Button type="button" variant="outline" onClick={() => setEditing(null)}>

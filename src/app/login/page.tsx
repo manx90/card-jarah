@@ -1,10 +1,18 @@
+import { AuthPageShell } from "@/components/auth/auth-page-shell";
+import { Card, CardContent } from "@/components/ui/card";
 import { LoginForm } from "./login-form";
 
 export default function LoginPage() {
   return (
-    <div className="mx-auto flex max-w-md flex-1 flex-col justify-center px-4 py-12">
-      <h1 className="mb-6 text-center text-2xl font-bold">تسجيل الدخول</h1>
-      <LoginForm />
-    </div>
+    <AuthPageShell
+      title="تسجيل الدخول"
+      description="ادخل إلى حسابك لمتابعة مشترياتك وتخصيص بطاقاتك"
+    >
+      <Card className="border-border/60 shadow-sm">
+        <CardContent className="pt-6">
+          <LoginForm />
+        </CardContent>
+      </Card>
+    </AuthPageShell>
   );
 }

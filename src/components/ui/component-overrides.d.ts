@@ -54,6 +54,8 @@ declare module "@/components/ui/select" {
   export const Select: React.ComponentType<{
     value?: string;
     onValueChange?: (v: string) => void;
+    onOpenChange?: (open: boolean) => void;
+    open?: boolean;
     required?: boolean;
     disabled?: boolean;
     children?: React.ReactNode;
@@ -69,13 +71,20 @@ declare module "@/components/ui/select" {
   export const SelectContent: React.ComponentType<{
     className?: string;
     children?: React.ReactNode;
-    position?: string;
-    align?: string;
+    position?: "popper" | "item-aligned";
+    align?: "start" | "center" | "end";
+    side?: "top" | "bottom" | "left" | "right";
+    sideOffset?: number;
+    alignOffset?: number;
+    avoidCollisions?: boolean;
+    collisionPadding?: number;
   }>;
   export const SelectItem: React.ComponentType<{
     className?: string;
     value: string;
     children?: React.ReactNode;
+    onPointerEnter?: React.PointerEventHandler<HTMLDivElement>;
+    onFocus?: React.FocusEventHandler<HTMLDivElement>;
   }>;
 }
 

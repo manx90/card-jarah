@@ -13,25 +13,60 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { Home, LayoutGrid, LogIn, LogOut, Menu, Shield, UserPlus } from "lucide-react";
+import {
+  Home,
+  LayoutGrid,
+  LogIn,
+  LogOut,
+  Menu,
+  Shield,
+  Sparkles,
+  User,
+  UserPlus,
+} from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { signOutToHome } from "@/lib/client-sign-out";
 import { useSession } from "next-auth/react";
 import { ThemeToggle } from "./theme-toggle";
 
-const navLinkClass =
-  "rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50";
+const navItems = [
+  { href: "/", label: "الرئيسية", icon: Home, exact: true },
+  { href: "/templates", label: "القوالب", icon: LayoutGrid, exact: false },
+];
 
-const mobileNavItemClass =
-  "flex items-center gap-3 rounded-xl px-4 py-3.5 text-base font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground active:bg-accent/80";
+function isNavActive(pathname: string, href: string, exact: boolean) {
+  if (exact) return pathname === href;
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+function navLinkClass(active: boolean) {
+  return cn(
+    "relative rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+    active
+      ? "bg-primary/10 text-primary"
+      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+  );
+}
+
+const mobileNavItemClass = (active: boolean) =>
+  cn(
+    "flex items-center gap-3 rounded-xl px-4 py-3.5 text-base font-medium transition-colors active:bg-accent/80",
+    active
+      ? "bg-primary/10 text-primary"
+      : "text-foreground hover:bg-accent hover:text-accent-foreground",
+  );
 
 export function SiteHeader() {
   const { data: session, status } = useSession();
+  const pathname = usePathname();
+  const displayName =
+    session?.user?.name?.trim() || session?.user?.email?.split("@")[0] || "حسابي";
 
   return (
     <header
       className={cn(
-        "sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-md",
+        "sticky top-0 z-50 border-b border-border/60 bg-background/85 backdrop-blur-md",
         "shadow-[0_1px_0_0_oklch(0_0_0/0.04)] dark:shadow-[0_1px_0_0_oklch(1_0_0/0.06)]",
       )}
     >
@@ -41,27 +76,46 @@ export function SiteHeader() {
       >
         <Link
           href="/"
-          className="group min-w-0 shrink-0 rounded-lg px-1 py-0.5 text-start outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring/50"
+          className="group min-w-0 shrink-0 rounded-xl px-1 py-0.5 outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring/50"
           dir="rtl"
         >
-          <span className="block truncate text-base font-semibold tracking-tight text-foreground">
-            فرحة
+          <span className="flex items-center gap-2">
+            <span className="bg-primary/10 text-primary flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors group-hover:bg-primary/15 sm:size-9 sm:rounded-xl">
+              <Sparkles className="size-4" aria-hidden />
+            </span>
+            <span className="block truncate text-base font-bold tracking-tight text-foreground sm:text-lg">
+              فرحة
+            </span>
           </span>
         </Link>
 
         <nav
-          className="hidden min-w-0 flex-1 items-center justify-center gap-0.5 md:flex"
+          className="hidden min-w-0 flex-1 items-center justify-center gap-1 md:flex"
           aria-label="التنقل الرئيسي"
           dir="rtl"
         >
-          <Link href="/" className={navLinkClass}>
-            الرئيسية
-          </Link>
-          <Link href="/templates" className={navLinkClass}>
-            القوالب
-          </Link>
+          {navItems.map((item) => {
+            const active = isNavActive(pathname, item.href, item.exact);
+            return (
+              <Link key={item.href} href={item.href} className={navLinkClass(active)}>
+                {item.label}
+                {active && (
+                  <span
+                    className="bg-primary absolute inset-x-2 -bottom-[calc(0.5rem+1px)] h-0.5 rounded-full"
+                    aria-hidden
+                  />
+                )}
+              </Link>
+            );
+          })}
           {session?.user?.role === "admin" && (
-            <Link href="/admin" className={cn(navLinkClass, "gap-1.5 text-primary")}>
+            <Link
+              href="/admin"
+              className={cn(
+                navLinkClass(pathname.startsWith("/admin")),
+                "gap-1.5",
+              )}
+            >
               <Shield className="size-3.5" aria-hidden />
               الإدارة
             </Link>
@@ -91,7 +145,10 @@ export function SiteHeader() {
               showCloseButton
             >
               <SheetHeader className="border-b border-border/60 bg-muted/30 px-5 py-6 text-start">
-                <SheetTitle className="text-xl font-bold tracking-tight" dir="rtl">
+                <SheetTitle className="flex items-center gap-2 text-xl font-bold tracking-tight" dir="rtl">
+                  <span className="bg-primary/10 text-primary flex size-8 items-center justify-center rounded-lg">
+                    <Sparkles className="size-4" aria-hidden />
+                  </span>
                   فرحة
                 </SheetTitle>
                 <SheetDescription className="text-start text-muted-foreground" dir="rtl">
@@ -103,23 +160,23 @@ export function SiteHeader() {
                 aria-label="التنقل — جوال"
                 dir="rtl"
               >
-                <SheetClose asChild>
-                  <Link href="/" className={mobileNavItemClass}>
-                    <Home className="size-5 shrink-0 opacity-80" aria-hidden />
-                    الرئيسية
-                  </Link>
-                </SheetClose>
-                <SheetClose asChild>
-                  <Link href="/templates" className={mobileNavItemClass}>
-                    <LayoutGrid className="size-5 shrink-0 opacity-80" aria-hidden />
-                    القوالب
-                  </Link>
-                </SheetClose>
+                {navItems.map((item) => {
+                  const active = isNavActive(pathname, item.href, item.exact);
+                  const Icon = item.icon;
+                  return (
+                    <SheetClose asChild key={item.href}>
+                      <Link href={item.href} className={mobileNavItemClass(active)}>
+                        <Icon className="size-5 shrink-0 opacity-80" aria-hidden />
+                        {item.label}
+                      </Link>
+                    </SheetClose>
+                  );
+                })}
                 {session?.user?.role === "admin" && (
                   <SheetClose asChild>
                     <Link
                       href="/admin"
-                      className={cn(mobileNavItemClass, "text-primary")}
+                      className={cn(mobileNavItemClass(pathname.startsWith("/admin")), "text-primary")}
                     >
                       <Shield className="size-5 shrink-0" aria-hidden />
                       الإدارة
@@ -132,14 +189,28 @@ export function SiteHeader() {
                   <p className="text-muted-foreground text-center text-sm">…</p>
                 ) : session ? (
                   <div className="flex flex-col gap-3">
+                    <p
+                      className="truncate text-center text-sm font-medium"
+                      title={session.user?.email ?? undefined}
+                    >
+                      {displayName}
+                    </p>
                     {session.user?.email && (
                       <p
                         className="truncate text-center text-xs text-muted-foreground"
-                        title={session.user.email}
+                        dir="ltr"
                       >
                         {session.user.email}
                       </p>
                     )}
+                    <SheetClose asChild>
+                      <Button variant="outline" className="w-full gap-2" asChild>
+                        <Link href="/account">
+                          <User className="size-4 opacity-80" aria-hidden />
+                          حسابي
+                        </Link>
+                      </Button>
+                    </SheetClose>
                     <Button
                       type="button"
                       variant="outline"
@@ -179,12 +250,12 @@ export function SiteHeader() {
               <span className="text-muted-foreground px-2 text-sm tabular-nums">…</span>
             ) : session ? (
               <div className="flex items-center gap-2 lg:gap-3">
-                <span
-                  className="hidden max-w-[11rem] truncate text-sm text-muted-foreground lg:inline"
-                  title={session.user?.email ?? undefined}
-                >
-                  {session.user?.email}
-                </span>
+                <Button variant="ghost" size="sm" className="hidden gap-1.5 px-2 lg:inline-flex" asChild>
+                  <Link href="/account" title={session.user?.email ?? undefined}>
+                    <User className="size-3.5 opacity-80" aria-hidden />
+                    <span className="max-w-[8rem] truncate">{displayName}</span>
+                  </Link>
+                </Button>
                 <Button
                   type="button"
                   variant="outline"

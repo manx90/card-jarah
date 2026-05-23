@@ -11,19 +11,24 @@ import {
   toDbRelative,
 } from "@/lib/storage";
 import { revalidateCategoryPages } from "@/lib/revalidate-public";
+import { validateAndProcessCategoryThumbnail } from "@/lib/validate-category-image";
 import { writeFile } from "fs/promises";
-import path from "path";
 import { randomUUID } from "crypto";
 
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
-function extFromFilename(name: string): string {
-  const ext = path.extname(name).toLowerCase();
-  if (!ext || ext.length > 8) return ".png";
-  if (![".png", ".jpg", ".jpeg", ".webp", ".gif"].includes(ext)) {
-    return ".png";
-  }
-  return ext;
+async function saveCategoryThumbnail(
+  subdir: string,
+  file: File,
+): Promise<{ ok: true; path: string } | { ok: false; error: string }> {
+  const raw = Buffer.from(await file.arrayBuffer());
+  const processed = await validateAndProcessCategoryThumbnail(raw);
+  if (!processed.ok) return processed;
+
+  await ensureUploadsDir(subdir);
+  const abs = absoluteUploadPath(`${subdir}/thumb.webp`);
+  await writeFile(abs, processed.data.buffer);
+  return { ok: true, path: toDbRelative(abs) };
 }
 
 export interface MutationResult {
@@ -53,24 +58,23 @@ export async function createCategoryAction(
   if (!SLUG.test(slug)) {
     return { ok: false, error: "المعرف: أحرف إنجليزية صغيرة وأرقام وشرطات فقط" };
   }
+  if (!(file instanceof File) || file.size === 0) {
+    return { ok: false, error: "صورة الفئة مطلوبة" };
+  }
 
   const id = randomUUID();
   const subdir = `categories/${id}`;
-  let thumbnailPath: string | null = null;
-
-  if (file instanceof File && file.size > 0) {
-    await ensureUploadsDir(subdir);
-    const ext = extFromFilename(file.name);
-    const abs = absoluteUploadPath(`${subdir}/thumb${ext}`);
-    await writeFile(abs, Buffer.from(await file.arrayBuffer()));
-    thumbnailPath = toDbRelative(abs);
+  const thumbResult = await saveCategoryThumbnail(subdir, file);
+  if (!thumbResult.ok) {
+    return { ok: false, error: thumbResult.error };
   }
+  const thumbnailPath = thumbResult.path;
 
   try {
     const repo = await getCategoryRepository();
     const existing = await repo.findOne({ where: { slug } });
     if (existing) {
-      if (thumbnailPath) await removeUnderUploads(subdir);
+      await removeUnderUploads(subdir);
       return { ok: false, error: "هذا المعرّف محجوز" };
     }
     const entity = repo.create({
@@ -126,11 +130,13 @@ export async function updateCategoryAction(
     }
     if (file instanceof File && file.size > 0) {
       await removeUnderUploads(`categories/${id}`);
-      await ensureUploadsDir(`categories/${id}`);
-      const ext = extFromFilename(file.name);
-      const abs = absoluteUploadPath(`categories/${id}/thumb${ext}`);
-      await writeFile(abs, Buffer.from(await file.arrayBuffer()));
-      row.thumbnailPath = toDbRelative(abs);
+      const thumbResult = await saveCategoryThumbnail(`categories/${id}`, file);
+      if (!thumbResult.ok) {
+        return { ok: false, error: thumbResult.error };
+      }
+      row.thumbnailPath = thumbResult.path;
+    } else if (!row.thumbnailPath) {
+      return { ok: false, error: "صورة الفئة مطلوبة" };
     }
     row.slug = slug;
     row.nameAr = nameAr;

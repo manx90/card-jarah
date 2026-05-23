@@ -1,3 +1,4 @@
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { MissingDatabaseNotice } from "@/components/setup/missing-database";
 import { getCategoryImageUrlById } from "@/lib/category-images";
 import { getCategoryRepository } from "@/lib/db";
@@ -10,7 +11,7 @@ export default async function AdminCategoriesPage() {
   if (!isDatabaseConfigured()) {
     return (
       <div className="space-y-4">
-        <h1 className="text-2xl font-bold">الفئات</h1>
+        <AdminPageHeader title="الفئات" />
         <MissingDatabaseNotice />
       </div>
     );
@@ -22,10 +23,10 @@ export default async function AdminCategoriesPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">الفئات</h1>
-        <p className="text-muted-foreground text-sm">المعرّف، الاسم، وصورة الغلاف</p>
-      </div>
+      <AdminPageHeader
+        title="الفئات"
+        description="المعرّف، الاسم، وصورة الغلاف"
+      />
       <AdminCategoriesTable
         initialRows={rows.map((c) => ({
           id: c.id,

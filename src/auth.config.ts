@@ -11,6 +11,7 @@ export const authConfig = {
       if (user && "id" in user && user.id) {
         token.id = user.id as string;
         token.role = (user as { role?: UserRole }).role ?? "user";
+        token.name = user.name ?? null;
       }
       return token;
     },
@@ -18,6 +19,7 @@ export const authConfig = {
       if (session.user) {
         session.user.id = (token.id as string) ?? "";
         session.user.role = (token.role as UserRole) ?? "user";
+        session.user.name = (token.name as string | null) ?? null;
       }
       return session;
     },

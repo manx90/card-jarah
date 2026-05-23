@@ -41,7 +41,7 @@ export function CategoryShowcase({ categories }: CategoryShowcaseProps) {
                 href={`/templates?category=${c.id}`}
                 className={cn(
                   "group relative block overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm",
-                  "transition-all hover:border-primary/30 hover:shadow-md",
+                  "transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5",
                 )}
               >
                 <div className="bg-muted relative aspect-4/3 w-full overflow-hidden">

@@ -4,10 +4,11 @@ import { getUserRepository } from "@/lib/db";
 import { isDatabaseConfigured } from "@/lib/db-config";
 import { logger } from "@/lib/logger";
 
-/** ينشئ أو يصلح المدير من ADMIN_EMAIL و ADMIN_PASSWORD (دور admin + كلمة المرور) */
+/** ينشئ أو يصلح المدير من ADMIN_EMAIL و ADMIN_PASSWORD (دور admin + كلمة المرور + الاسم) */
 export async function ensureDefaultAdmin(): Promise<void> {
   const email = process.env.ADMIN_EMAIL?.trim().toLowerCase();
   const password = process.env.ADMIN_PASSWORD?.trim();
+  const adminName = process.env.ADMIN_NAME?.trim() || "mansiyah";
 
   if (!email || !password) {
     await logger.warn("default admin skipped: ADMIN_EMAIL or ADMIN_PASSWORD missing");
@@ -26,11 +27,13 @@ export async function ensureDefaultAdmin(): Promise<void> {
     await repo.save(
       repo.create({
         email,
+        name: adminName,
+        phone: null,
         passwordHash,
         role: "admin",
       }),
     );
-    await logger.event("admin.created", { email });
+    await logger.event("admin.created", { email, name: adminName });
     return;
   }
 
@@ -40,6 +43,11 @@ export async function ensureDefaultAdmin(): Promise<void> {
     await logger.warn("admin role repair", { email, from: existing.role });
     existing.role = "admin";
     repairs.push("role→admin");
+  }
+
+  if (!existing.name?.trim()) {
+    existing.name = adminName;
+    repairs.push("name set");
   }
 
   const passwordMatches = await bcrypt.compare(password, existing.passwordHash);

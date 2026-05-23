@@ -5,6 +5,7 @@ import { Category } from "@/entities/Category";
 import { Purchase } from "@/entities/Purchase";
 import { Template } from "@/entities/Template";
 import { User } from "@/entities/User";
+import { UserDesign } from "@/entities/UserDesign";
 import type { Repository } from "typeorm";
 import { DataSource } from "typeorm";
 
@@ -64,7 +65,7 @@ export async function getDataSource(): Promise<DataSource> {
   const ds = new DataSource({
     type: "postgres",
     url: getPostgresUrl(),
-    entities: [User, Category, Template, Purchase],
+    entities: [User, Category, Template, Purchase, UserDesign],
     synchronize,
     logging: process.env.TYPEORM_LOGGING === "true",
   });
@@ -102,4 +103,8 @@ export async function getPurchaseRepository(): Promise<Repository<Purchase>> {
 
 export async function getUserRepository(): Promise<Repository<User>> {
   return (await getDataSource()).getRepository("users") as Repository<User>;
+}
+
+export async function getUserDesignRepository(): Promise<Repository<UserDesign>> {
+  return (await getDataSource()).getRepository("user_designs") as Repository<UserDesign>;
 }

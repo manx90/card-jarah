@@ -11,6 +11,12 @@ export class User {
   @Column({ unique: true })
   email!: string;
 
+  @Column({ type: "varchar", length: 120, nullable: true })
+  name!: string | null;
+
+  @Column({ type: "varchar", length: 24, nullable: true })
+  phone!: string | null;
+
   @Column({ name: "password_hash" })
   passwordHash!: string;
 

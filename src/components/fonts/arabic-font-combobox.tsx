@@ -24,12 +24,15 @@ import { useEffect, useState } from "react";
 export function ArabicFontCombobox({
   value,
   onChange,
+  onPreviewChange,
   disabled,
   className,
   id,
 }: {
   value: string;
   onChange: (key: string) => void;
+  /** معاينة مؤقتة عند المرور على الخط — تُلغى عند الاختيار أو إغلاق القائمة */
+  onPreviewChange?: (fontKey: string | null) => void;
   disabled?: boolean;
   className?: string;
   id?: string;
@@ -41,8 +44,13 @@ export function ArabicFontCombobox({
     ensureGoogleFontLoaded(current.googleFamily);
   }, [current.googleFamily]);
 
+  function handleOpenChange(next: boolean) {
+    setOpen(next);
+    if (!next) onPreviewChange?.(null);
+  }
+
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <Button
           id={id}
@@ -61,8 +69,11 @@ export function ArabicFontCombobox({
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className="w-[var(--radix-popover-trigger-width)] max-w-[min(100vw-2rem,28rem)] p-0 sm:w-auto sm:min-w-[320px]"
+        side="bottom"
         align="start"
+        sideOffset={4}
+        collisionPadding={12}
+        className="z-[100] w-[var(--radix-popover-trigger-width)] max-w-[min(100vw-2rem,28rem)] p-0 sm:w-auto sm:min-w-[320px]"
       >
         <Command className="rounded-lg border-0 shadow-none">
           <CommandInput placeholder="ابحث عن خط…" className="h-9" />
@@ -74,9 +85,14 @@ export function ArabicFontCombobox({
                   key={font.key}
                   className="font-sans"
                   value={`${font.label} ${font.googleFamily} ${font.key}`}
+                  onMouseEnter={() => {
+                    ensureGoogleFontLoaded(font.googleFamily);
+                    onPreviewChange?.(font.key);
+                  }}
                   onSelect={() => {
                     ensureGoogleFontLoaded(font.googleFamily);
                     onChange(font.key);
+                    onPreviewChange?.(null);
                     setOpen(false);
                   }}
                 >

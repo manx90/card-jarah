@@ -1,3 +1,4 @@
+import { ConditionalSiteFooter } from "@/components/layout/conditional-site-footer";
 import { AppProviders } from "@/components/providers/app-providers";
 import { SiteHeader } from "@/components/layout/site-header";
 import type { Metadata, Viewport } from "next";
@@ -35,6 +36,7 @@ export default function RootLayout({
         <AppProviders>
           <SiteHeader />
           <div className="flex min-w-0 flex-1 flex-col">{children}</div>
+          <ConditionalSiteFooter />
         </AppProviders>
       </body>
     </html>
