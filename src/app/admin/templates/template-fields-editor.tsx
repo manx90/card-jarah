@@ -1,5 +1,6 @@
 "use client";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -27,6 +28,7 @@ import {
   buildTemplateFieldsConfig,
   isTextLikeField,
   parseTemplateFieldsConfig,
+  resolveFieldDefaultValue,
 } from "@/lib/template-fields-config";
 import {
   DEFAULT_FONT_STYLE,
@@ -45,7 +47,7 @@ import type {
   TemplateFieldSelect,
   TemplateFieldText,
 } from "@/types/template-fields";
-import { GripVertical, Maximize2, Plus, Trash2 } from "lucide-react";
+import { GripVertical, ImageIcon, Link2, List, Maximize2, Plus, Trash2, Type } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   scaleFontSizeToContainer,
@@ -53,12 +55,41 @@ import {
 } from "@/lib/card-preview-font-scale";
 import { ensureGoogleFontLoaded } from "@/lib/load-google-font";
 import { randomUuid } from "@/lib/random-uuid";
+import { cn } from "@/lib/utils";
+import type { ReactNode } from "react";
 
 function clamp01(n: number): number {
   return Math.min(0.98, Math.max(0.02, n));
 }
 
 type FieldKind = TemplateField["type"];
+
+function fieldTypeMeta(f: TemplateField): {
+  label: string;
+  icon: typeof Type;
+} {
+  if (f.type === "text") return { label: "نص", icon: Type };
+  if (f.type === "select") return { label: "قائمة", icon: List };
+  if (f.type === "link") return { label: "رابط + QR", icon: Link2 };
+  return { label: "صورة", icon: ImageIcon };
+}
+
+function FieldEditorRow({
+  label,
+  children,
+  className,
+}: {
+  label: string;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={cn("space-y-1.5", className)}>
+      <Label className="text-muted-foreground text-xs font-medium">{label}</Label>
+      {children}
+    </div>
+  );
+}
 
 export function TemplateFieldsEditor({
   defaultFieldsJson,
@@ -216,9 +247,10 @@ export function TemplateFieldsEditor({
   }
 
   function previewLabel(f: TemplateField): string {
-    if (f.type === "select") return f.options[0] ?? f.label;
     if (f.type === "link") return "QR";
-    return f.label;
+    if (f.type === "image") return f.label;
+    const v = resolveFieldDefaultValue(f);
+    return v.trim() || f.label;
   }
 
   function insertSelectOption(fieldId: string, options: string[], index: number) {
@@ -308,127 +340,190 @@ export function TemplateFieldsEditor({
       )}
 
       {fields.length > 0 && (
-        <ul className="space-y-3 rounded-lg border bg-muted/20 p-3">
-          {fields.map((f) => (
-            <li
-              key={f.id}
-              className={`flex flex-wrap items-end gap-2 rounded-md border p-2 ${
-                selectedId === f.id ? "border-primary bg-primary/5" : "border-transparent"
-              }`}
-            >
-              <div className="min-w-[100px] flex-1 space-y-1">
-                <Label className="text-xs">
-                  {f.type === "text" && "نص"}
-                  {f.type === "select" && "قائمة"}
-                  {f.type === "link" && "رابط"}
-                  {f.type === "image" && "صورة"} — تسمية
-                </Label>
-                <Input
-                  value={f.label}
-                  onChange={(e) => updateField(f.id, { label: e.target.value })}
-                  onFocus={() => setSelectedId(f.id)}
-                />
-              </div>
-              <div className="min-w-[140px] space-y-1">
-                <Label className="text-xs">القسم (نص + قائمة + … معاً)</Label>
-                <Select
-                  value={f.groupId ?? "__none__"}
-                  onValueChange={(v) =>
-                    updateField(f.id, {
-                      groupId: v === "__none__" ? undefined : v,
-                    })
-                  }
+        <ul className="space-y-3">
+          {fields.map((f) => {
+            const meta = fieldTypeMeta(f);
+            const TypeIcon = meta.icon;
+            const isSelected = selectedId === f.id;
+            const hasValueFields =
+              f.type === "text" || f.type === "select" || f.type === "link";
+
+            return (
+              <li
+                key={f.id}
+                className={cn(
+                  "rounded-xl border bg-background shadow-sm transition-colors",
+                  isSelected
+                    ? "border-primary ring-primary/20 ring-2"
+                    : "border-border/60 hover:border-border",
+                )}
+              >
+                <div
+                  className="flex cursor-pointer items-center justify-between gap-2 border-b border-border/50 px-3 py-2.5 sm:px-4"
+                  onClick={() => setSelectedId(f.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") setSelectedId(f.id);
+                  }}
+                  role="button"
+                  tabIndex={0}
                 >
-                  <SelectTrigger className="h-9">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__none__">بدون قسم</SelectItem>
-                    {groups.map((g) => (
-                      <SelectItem key={g.id} value={g.id}>
-                        {g.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              {(f.type === "text" || f.type === "select" || f.type === "link") && (
-                <div className="min-w-[180px] flex-1 space-y-1">
-                  <Label className="text-xs">نص توضيحي (placeholder)</Label>
-                  <Input
-                    placeholder="يظهر داخل الحقل للمستخدم"
-                    value={f.placeholder ?? ""}
-                    onChange={(e) =>
-                      updateField(f.id, {
-                        placeholder: e.target.value.trim() || undefined,
-                      })
-                    }
-                    onFocus={() => setSelectedId(f.id)}
-                  />
+                  <div className="flex min-w-0 items-center gap-2">
+                    <Badge variant="secondary" className="gap-1 shrink-0 font-normal">
+                      <TypeIcon className="size-3" aria-hidden />
+                      {meta.label}
+                    </Badge>
+                    <span className="text-muted-foreground truncate text-xs">
+                      {f.label.trim() || "بدون تسمية"}
+                    </span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="text-destructive size-8 shrink-0"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeField(f.id);
+                    }}
+                    aria-label="حذف الحقل"
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
                 </div>
-              )}
-              {f.type === "select" && (
-                <div className="w-full min-w-[200px] space-y-2 sm:flex-[2]">
-                  <Label className="text-xs">خيارات القائمة</Label>
-                  <div className="flex flex-col gap-2">
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="sm"
-                      className="h-8 w-full text-xs"
-                      onClick={() => insertSelectOption(f.id, f.options, 0)}
-                    >
-                      + إضافة خيار في بداية القائمة
-                    </Button>
-                    {f.options.map((opt, idx) => (
-                      <div key={`${f.id}-opt-${idx}`} className="flex flex-col gap-1.5">
-                        <div className="flex gap-1">
-                          <Input
-                            value={opt}
-                            onChange={(e) =>
-                              updateSelectOption(f.id, f.options, idx, e.target.value)
-                            }
-                            onFocus={() => setSelectedId(f.id)}
-                            placeholder={`خيار ${idx + 1}`}
-                          />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="icon"
-                            className="shrink-0"
-                            disabled={f.options.length <= 1}
-                            onClick={() => removeSelectOption(f.id, f.options, idx)}
-                            aria-label="حذف الخيار"
-                          >
-                            <Trash2 className="size-4" />
-                          </Button>
-                        </div>
+
+                <div className="space-y-3 p-3 sm:p-4">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <FieldEditorRow label="تسمية الحقل (في قائمة العميل)">
+                      <Input
+                        value={f.label}
+                        onChange={(e) => updateField(f.id, { label: e.target.value })}
+                        onFocus={() => setSelectedId(f.id)}
+                        placeholder="مثال: الجعيمري"
+                      />
+                    </FieldEditorRow>
+
+                    <FieldEditorRow label="القسم">
+                      <Select
+                        value={f.groupId ?? "__none__"}
+                        onValueChange={(v) =>
+                          updateField(f.id, {
+                            groupId: v === "__none__" ? undefined : v,
+                          })
+                        }
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="بدون قسم" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="__none__">بدون قسم</SelectItem>
+                          {groups.map((g) => (
+                            <SelectItem key={g.id} value={g.id}>
+                              {g.title}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FieldEditorRow>
+
+                    {hasValueFields && (
+                      <FieldEditorRow
+                        label={
+                          f.type === "link"
+                            ? "رابط افتراضي على البطاقة"
+                            : "النص الافتراضي على البطاقة"
+                        }
+                        className="sm:col-span-2"
+                      >
+                        <Input
+                          placeholder={
+                            f.type === "link"
+                              ? "https://maps.google.com/..."
+                              : "ما يظهر على البطاقة ويعدّله العميل"
+                          }
+                          value={f.defaultValue ?? ""}
+                          onChange={(e) =>
+                            updateField(f.id, {
+                              defaultValue: e.target.value.trim() || undefined,
+                            })
+                          }
+                          onFocus={() => setSelectedId(f.id)}
+                        />
+                      </FieldEditorRow>
+                    )}
+
+                    {hasValueFields && (
+                      <FieldEditorRow
+                        label="نص توضيحي (placeholder)"
+                        className="sm:col-span-2"
+                      >
+                        <Input
+                          placeholder="يظهر داخل حقل الإدخال عندما يكون فارغاً"
+                          value={f.placeholder ?? ""}
+                          onChange={(e) =>
+                            updateField(f.id, {
+                              placeholder: e.target.value.trim() || undefined,
+                            })
+                          }
+                          onFocus={() => setSelectedId(f.id)}
+                        />
+                      </FieldEditorRow>
+                    )}
+                  </div>
+
+                  {f.type === "select" && (
+                    <div className="space-y-2 rounded-lg border border-dashed border-border/70 bg-muted/20 p-3">
+                      <Label className="text-xs font-medium">خيارات القائمة</Label>
+                      <div className="flex flex-col gap-2">
                         <Button
                           type="button"
-                          variant="outline"
+                          variant="secondary"
                           size="sm"
                           className="h-8 w-full text-xs"
-                          onClick={() => insertSelectOption(f.id, f.options, idx + 1)}
+                          onClick={() => insertSelectOption(f.id, f.options, 0)}
                         >
-                          + إضافة خيار بين هذا والتالي
+                          + إضافة خيار في البداية
                         </Button>
+                        {f.options.map((opt, idx) => (
+                          <div key={`${f.id}-opt-${idx}`} className="flex flex-col gap-1.5">
+                            <div className="flex gap-2">
+                              <Input
+                                value={opt}
+                                onChange={(e) =>
+                                  updateSelectOption(f.id, f.options, idx, e.target.value)
+                                }
+                                onFocus={() => setSelectedId(f.id)}
+                                placeholder={`خيار ${idx + 1}`}
+                              />
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                className="shrink-0"
+                                disabled={f.options.length <= 1}
+                                onClick={() => removeSelectOption(f.id, f.options, idx)}
+                                aria-label="حذف الخيار"
+                              >
+                                <Trash2 className="size-4" />
+                              </Button>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="h-8 w-full text-xs"
+                              onClick={() => insertSelectOption(f.id, f.options, idx + 1)}
+                            >
+                              + إضافة خيار بعد هذا
+                            </Button>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  )}
                 </div>
-              )}
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="text-destructive shrink-0"
-                onClick={() => removeField(f.id)}
-                aria-label="حذف"
-              >
-                <Trash2 className="size-4" />
-              </Button>
-            </li>
-          ))}
+              </li>
+            );
+          })}
         </ul>
       )}
 

@@ -24,6 +24,7 @@ import {
   getFontEntryByKey,
 } from "@/lib/arabic-fonts";
 import { groupFieldsForForm } from "@/lib/template-fields-form-order";
+import { isTextLikeField, resolveFieldDefaultValue } from "@/lib/template-fields-config";
 import { exportCardVideo, validateVoiceMeta } from "@/lib/export-card-video";
 import { captureCardToCanvas, captureCardToPng, fieldEditChromeClass } from "@/lib/capture-card-image";
 import { ensureGoogleFontLoaded } from "@/lib/load-google-font";
@@ -35,7 +36,6 @@ import {
   scaleFontSizeToContainer,
   useCardPreviewContainerWidth,
 } from "@/lib/card-preview-font-scale";
-import { isTextLikeField } from "@/lib/template-fields-config";
 import { cn } from "@/lib/utils";
 import { mergeTextStyleWithPreview, resolveFieldTextStyle } from "@/lib/resolve-field-text-style";
 import type { EditorState, FieldTextStyle, VoiceMeta } from "@/types/editor-state";
@@ -68,11 +68,7 @@ import { FieldTextStylePanel } from "./field-text-style-panel";
 function buildInitialValues(fields: TemplateField[]): Record<string, string> {
   const o: Record<string, string> = {};
   for (const f of fields) {
-    if (f.type === "select") {
-      o[f.id] = f.options[0] ?? "";
-    } else {
-      o[f.id] = "";
-    }
+    o[f.id] = resolveFieldDefaultValue(f);
   }
   return o;
 }

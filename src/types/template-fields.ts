@@ -9,6 +9,8 @@ export interface TemplateFieldText {
   type: "text";
   groupId?: string;
   label: string;
+  /** النص الافتراضي على البطاقة — يعدّله العميل */
+  defaultValue?: string;
   placeholder?: string;
   x: number;
   y: number;
@@ -26,6 +28,7 @@ export interface TemplateFieldSelect {
   type: "select";
   groupId?: string;
   label: string;
+  defaultValue?: string;
   placeholder?: string;
   options: string[];
   x: number;
@@ -44,6 +47,8 @@ export interface TemplateFieldLink {
   type: "link";
   groupId?: string;
   label: string;
+  /** الرابط الافتراضي على البطاقة */
+  defaultValue?: string;
   placeholder?: string;
   x: number;
   y: number;

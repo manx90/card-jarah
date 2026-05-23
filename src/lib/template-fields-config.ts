@@ -42,6 +42,8 @@ export function normalizeTemplateField(raw: unknown): TemplateField | null {
       type: "text",
       groupId,
       label: typeof o.label === "string" ? o.label : "نص",
+      defaultValue:
+        typeof o.defaultValue === "string" ? o.defaultValue : undefined,
       placeholder: typeof o.placeholder === "string" ? o.placeholder : undefined,
       x: typeof o.x === "number" ? clamp01(o.x) : 0.5,
       y: typeof o.y === "number" ? clamp01(o.y) : 0.5,
@@ -95,6 +97,8 @@ export function normalizeTemplateField(raw: unknown): TemplateField | null {
       type: "link",
       groupId,
       label: typeof o.label === "string" ? o.label : "رابط",
+      defaultValue:
+        typeof o.defaultValue === "string" ? o.defaultValue : undefined,
       placeholder: typeof o.placeholder === "string" ? o.placeholder : undefined,
       x: typeof o.x === "number" ? clamp01(o.x) : 0.5,
       y: typeof o.y === "number" ? clamp01(o.y) : 0.5,
@@ -185,4 +189,23 @@ export type TextLikeField = TemplateFieldText | TemplateFieldSelect;
 
 export function isTextLikeField(f: TemplateField): f is TextLikeField {
   return f.type === "text" || f.type === "select";
+}
+
+/** قيمة البطاقة الابتدائية — defaultValue أو label للقوالب القديمة */
+export function resolveFieldDefaultValue(f: TemplateField): string {
+  if (f.type === "image") return "";
+  const custom = f.defaultValue?.trim();
+  if (f.type === "select") {
+    if (custom) {
+      return f.options.includes(custom) ? custom : (f.options[0] ?? custom);
+    }
+    return f.options[0] ?? "";
+  }
+  if (f.type === "text") {
+    return custom ?? f.label ?? "";
+  }
+  if (f.type === "link") {
+    return custom ?? "";
+  }
+  return "";
 }
