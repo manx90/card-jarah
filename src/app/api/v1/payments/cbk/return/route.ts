@@ -241,7 +241,7 @@ async function finalizePurchase(
   await repo.save(purchase);
 
   if (nextStatus === "paid") {
-    return redirectTo(`/templates/${purchase.templateId}?payment=success`);
+    return redirectTo(`/account/purchases/${purchase.id}/receipt?payment=success`);
   }
 
   const statusInfo = resolveCbkPaymentStatus(details.Status);

@@ -11,7 +11,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHero } from "@/components/layout/page-hero";
-import { FolderOpen, Palette, ShoppingBag } from "lucide-react";
+import { FolderOpen, FileText, Palette, ShoppingBag } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -20,8 +20,11 @@ interface PurchaseItem {
   templateId: string;
   templateTitle: string;
   categoryName: string | null;
+  statusLabel: string;
+  priceFormatted: string;
   createdAt: string;
   customizeUrl: string;
+  receiptUrl: string;
 }
 
 interface DesignItem {
@@ -143,17 +146,30 @@ export function AccountDesignsClient() {
                   )}
                 </CardHeader>
                 <CardContent className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-muted-foreground text-xs">
-                    {new Date(p.createdAt).toLocaleDateString("ar-KW", {
-                      dateStyle: "medium",
-                    })}
-                  </span>
-                  <Button size="sm" variant="outline" className="gap-1.5" asChild>
-                    <Link href={p.customizeUrl}>
-                      <Palette className="size-4" />
-                      تخصيص
-                    </Link>
-                  </Button>
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium">{p.priceFormatted}</p>
+                    <span className="text-muted-foreground text-xs">
+                      {new Date(p.createdAt).toLocaleDateString("ar-KW", {
+                        dateStyle: "medium",
+                      })}
+                      {" · "}
+                      {p.statusLabel}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button size="sm" variant="outline" className="gap-1.5" asChild>
+                      <Link href={p.receiptUrl}>
+                        <FileText className="size-4" />
+                        الإيصال
+                      </Link>
+                    </Button>
+                    <Button size="sm" className="gap-1.5" asChild>
+                      <Link href={p.customizeUrl}>
+                        <Palette className="size-4" />
+                        تخصيص
+                      </Link>
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))

@@ -49,10 +49,15 @@ export function TemplateDetailActions({
       });
       const json = (await res.json()) as {
         success?: boolean;
+        data?: { purchaseId?: string };
         error?: { message?: string };
       };
       if (!res.ok || !json.success) {
         setError(json.error?.message ?? "فشل الشراء");
+        return;
+      }
+      if (json.data?.purchaseId) {
+        router.push(`/account/purchases/${json.data.purchaseId}/receipt?payment=success`);
         return;
       }
       router.refresh();

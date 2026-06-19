@@ -11,6 +11,11 @@ import { isCbkPaymentConfigured } from "@/modules/payments/cbk-config";
 import { formatPriceKwd } from "@/lib/currency";
 import { formatPaymentUserMessage } from "@/modules/payments/cbk-errors";
 import { isDatabaseConfigured } from "@/lib/db-config";
+import {
+  buildTemplateWhatsAppMessage,
+  buildWhatsAppUrl,
+  getWhatsAppNumber,
+} from "@/lib/whatsapp";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,7 +26,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { ArrowRight, Palette } from "lucide-react";
+import { ArrowRight, FileText, MessageCircle, Palette } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { TemplateDetailActions } from "./template-detail-actions";
@@ -54,21 +59,41 @@ export default async function TemplateDetailPage({
 
   const session = await auth();
   let purchased = false;
+  let purchaseId: string | null = null;
   if (session?.user?.id) {
-    purchased = await (await getPurchaseRepository()).exists({
+    const purchase = await (await getPurchaseRepository()).findOne({
       where: {
         userId: session.user.id,
         templateId: id,
         status: purchaseAccessStatusIn(),
       },
     });
+    purchased = !!purchase;
+    purchaseId = purchase?.id ?? null;
   }
+
+  const whatsappNumber = getWhatsAppNumber();
+  const whatsappUrl = whatsappNumber
+    ? buildWhatsAppUrl(
+        whatsappNumber,
+        buildTemplateWhatsAppMessage({
+          title: template.title,
+          price: template.price,
+          templateId: template.id,
+          categoryName: template.category?.nameAr,
+        }),
+      )
+    : null;
 
   const previewUrl = `/api/v1/templates/${template.id}/preview`;
 
   const paymentNotice =
     sp.payment === "success"
-      ? { kind: "ok" as const, text: "تم الدفع بنجاح — يمكنك التحميل والتخصيص." }
+      ? {
+          kind: "ok" as const,
+          text: "تم الدفع بنجاح — يمكنك التحميل والتخصيص.",
+          receiptUrl: purchaseId ? `/account/purchases/${purchaseId}/receipt` : null,
+        }
       : sp.payment === "error"
         ? {
             kind: "err" as const,
@@ -78,6 +103,7 @@ export default async function TemplateDetailPage({
                 code: sp.code,
                 status: sp.status,
               }),
+            receiptUrl: null,
           }
         : null;
 
@@ -142,7 +168,15 @@ export default async function TemplateDetailPage({
                     : "bg-destructive/10 text-destructive rounded-xl border border-destructive/30 px-4 py-3 text-sm"
                 }
               >
-                {paymentNotice.text}
+                <p>{paymentNotice.text}</p>
+                {paymentNotice.receiptUrl && (
+                  <Link
+                    href={paymentNotice.receiptUrl}
+                    className="mt-2 inline-block font-medium underline"
+                  >
+                    عرض الإيصال وحفظه
+                  </Link>
+                )}
               </div>
             )}
           </CardContent>
@@ -162,6 +196,22 @@ export default async function TemplateDetailPage({
                   <Palette className="size-4" aria-hidden />
                   تخصيص البطاقة
                 </Link>
+              </Button>
+            )}
+            {session && purchased && purchaseId && (
+              <Button className="w-full gap-2" variant="secondary" size="lg" asChild>
+                <Link href={`/account/purchases/${purchaseId}/receipt`}>
+                  <FileText className="size-4" aria-hidden />
+                  عرض الإيصال
+                </Link>
+              </Button>
+            )}
+            {whatsappUrl && (
+              <Button className="w-full gap-2" variant="outline" size="lg" asChild>
+                <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+                  <MessageCircle className="size-4" aria-hidden />
+                  استفسار عبر واتساب
+                </a>
               </Button>
             )}
             {!purchased && (

@@ -271,3 +271,9 @@
     animation: shiny 2.5s ease-in-out infinite;
   }
 }
+
+@media print {
+  body {
+    background: white !important;
+  }
+}

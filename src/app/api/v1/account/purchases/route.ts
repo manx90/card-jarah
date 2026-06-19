@@ -2,8 +2,10 @@ import { withApiHandler } from "@/lib/api-route";
 import { jsonError, jsonSuccess } from "@/lib/api-response";
 import { requireDatabaseConfigured } from "@/lib/api-db-guard";
 import { auth } from "@/auth";
+import { formatPriceKwd } from "@/lib/currency";
 import { getPurchaseRepository } from "@/lib/db";
 import { purchaseAccessStatusIn } from "@/lib/purchase-access";
+import { purchaseStatusLabel } from "@/lib/purchase-status";
 
 export const GET = withApiHandler("v1.account.purchases", async () => {
   const session = await auth();
@@ -30,8 +32,12 @@ export const GET = withApiHandler("v1.account.purchases", async () => {
       templateTitle: p.template?.title ?? "",
       categoryName: p.template?.category?.nameAr ?? null,
       status: p.status,
+      statusLabel: purchaseStatusLabel(p.status),
+      price: p.template?.price ?? "0",
+      priceFormatted: formatPriceKwd(p.template?.price ?? "0"),
       createdAt: p.createdAt.toISOString(),
       customizeUrl: `/templates/${p.templateId}/customize`,
+      receiptUrl: `/account/purchases/${p.id}/receipt`,
     }));
 
     return jsonSuccess({ items });
