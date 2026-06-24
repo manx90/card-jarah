@@ -19,6 +19,7 @@ import {
   LogIn,
   LogOut,
   Menu,
+  Palette,
   Shield,
   Sparkles,
   User,
@@ -108,6 +109,18 @@ export function SiteHeader() {
               </Link>
             );
           })}
+          {session?.user?.id && (
+            <Link
+              href="/account/designs"
+              className={cn(
+                navLinkClass(pathname.startsWith("/account/designs")),
+                "gap-1.5",
+              )}
+            >
+              <Palette className="size-3.5" aria-hidden />
+              تصاميمي
+            </Link>
+          )}
           {session?.user?.role === "admin" && (
             <Link
               href="/admin"
@@ -172,6 +185,17 @@ export function SiteHeader() {
                     </SheetClose>
                   );
                 })}
+                {session?.user?.id && (
+                  <SheetClose asChild>
+                    <Link
+                      href="/account/designs"
+                      className={mobileNavItemClass(pathname.startsWith("/account/designs"))}
+                    >
+                      <Palette className="size-5 shrink-0 opacity-80" aria-hidden />
+                      تصاميمي
+                    </Link>
+                  </SheetClose>
+                )}
                 {session?.user?.role === "admin" && (
                   <SheetClose asChild>
                     <Link
@@ -203,6 +227,14 @@ export function SiteHeader() {
                         {session.user.email}
                       </p>
                     )}
+                    <SheetClose asChild>
+                      <Button className="w-full gap-2 shadow-sm" asChild>
+                        <Link href="/account/designs">
+                          <Palette className="size-4" aria-hidden />
+                          تصاميمي
+                        </Link>
+                      </Button>
+                    </SheetClose>
                     <SheetClose asChild>
                       <Button variant="outline" className="w-full gap-2" asChild>
                         <Link href="/account">
@@ -250,6 +282,17 @@ export function SiteHeader() {
               <span className="text-muted-foreground px-2 text-sm tabular-nums">…</span>
             ) : session ? (
               <div className="flex items-center gap-2 lg:gap-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 border-border/80 shadow-none"
+                  asChild
+                >
+                  <Link href="/account/designs">
+                    <Palette className="size-3.5" aria-hidden />
+                    <span className="hidden sm:inline">تصاميمي</span>
+                  </Link>
+                </Button>
                 <Button variant="ghost" size="sm" className="hidden gap-1.5 px-2 lg:inline-flex" asChild>
                   <Link href="/account" title={session.user?.email ?? undefined}>
                     <User className="size-3.5 opacity-80" aria-hidden />
