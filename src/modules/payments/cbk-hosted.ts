@@ -287,11 +287,12 @@ export function mapCbkGatewayStatus(
   }
 }
 
+/** PayId = merchant track (tij_MerchantPaymentTrack); TrackId = gateway internal id — CBK manual p.12 */
 export function cbkResolveTrackKey(details: {
   TrackId?: string;
   PayId?: string;
 }): string | null {
-  const track = details.TrackId?.trim() || details.PayId?.trim();
+  const track = details.PayId?.trim() || details.TrackId?.trim();
   return track || null;
 }
 

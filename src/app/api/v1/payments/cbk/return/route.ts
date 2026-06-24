@@ -13,6 +13,7 @@ import {
   type CbkTransactionDetails,
 } from "@/modules/payments/cbk-hosted";
 import {
+  cbkMerchantTrackForVerify,
   findPurchaseForCbkResult,
   purchaseStatusFromCbk,
   validateCbkPaidAmount,
@@ -166,7 +167,7 @@ export const GET = withApiHandler("v1.payments.cbk.return", async (request: Requ
       );
     }
 
-    const payId = details.PayId?.trim() ?? details.TrackId?.trim() ?? "";
+    const payId = cbkMerchantTrackForVerify(details, payTrackIdParam) ?? "";
     if (payId) {
       clearCachedCbkAccessToken(cbkTokenCacheKey(creds.clientId));
       const token2 = await getCbkAccessToken(creds);

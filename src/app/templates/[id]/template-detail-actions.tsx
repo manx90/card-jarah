@@ -39,6 +39,10 @@ export function TemplateDetailActions({
   const [error, setError] = useState<string | null>(null);
 
   async function mockPurchase() {
+    if (!isLoggedIn) {
+      router.push(`/login?callbackUrl=/templates/${templateId}`);
+      return;
+    }
     setBusy("mock");
     setError(null);
     try {
@@ -69,6 +73,10 @@ export function TemplateDetailActions({
   }
 
   async function cbkCheckout() {
+    if (!isLoggedIn) {
+      router.push(`/login?callbackUrl=/templates/${templateId}`);
+      return;
+    }
     setBusy("cbk");
     setError(null);
     try {

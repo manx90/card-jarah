@@ -67,9 +67,9 @@ export function getCbkCredentials(): CbkCredentials {
 
 export function getAppPublicBaseUrl(): string {
 	const raw =
-		process.env.AUTH_URL?.trim() ||
 		process.env.APP_URL?.trim() ||
 		process.env.NEXT_PUBLIC_APP_URL?.trim() ||
+		process.env.AUTH_URL?.trim() ||
 		"";
 	if (!raw) {
 		throw new Error(

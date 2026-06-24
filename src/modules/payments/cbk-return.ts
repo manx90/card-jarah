@@ -1,12 +1,18 @@
 import type { Repository } from "typeorm";
 import type { Purchase } from "@/entities/Purchase";
 import {
-  cbkResolveTrackKey,
   formatCbkAmountKuwaitStyle,
   mapCbkGatewayStatus,
   type CbkTransactionDetails,
 } from "./cbk-hosted";
 import { getTemplateRepository } from "@/lib/db";
+
+async function findPurchaseByTrackId(
+  repo: Repository<Purchase>,
+  trackId: string,
+): Promise<Purchase | null> {
+  return repo.findOne({ where: { paymentTrackId: trackId } });
+}
 
 export async function findPurchaseForCbkResult(
   repo: Repository<Purchase>,
@@ -15,17 +21,42 @@ export async function findPurchaseForCbkResult(
 ): Promise<Purchase | null> {
   const udf1 = details.MerchUdf1?.trim();
   if (udf1) {
+    const byTrack = await findPurchaseByTrackId(repo, udf1);
+    if (byTrack) return byTrack;
     const byId = await repo.findOne({ where: { id: udf1 } });
     if (byId) return byId;
-    const byTrack = await repo.findOne({ where: { paymentTrackId: udf1 } });
-    if (byTrack) return byTrack;
   }
 
-  const trackKey =
-    cbkResolveTrackKey(details) ?? payTrackFromQuery?.trim() ?? null;
-  if (!trackKey) return null;
+  const fromQuery = payTrackFromQuery?.trim();
+  if (fromQuery) {
+    const byQuery = await findPurchaseByTrackId(repo, fromQuery);
+    if (byQuery) return byQuery;
+  }
 
-  return repo.findOne({ where: { paymentTrackId: trackKey } });
+  const merchantTrack = details.PayId?.trim();
+  if (merchantTrack) {
+    const byPayId = await findPurchaseByTrackId(repo, merchantTrack);
+    if (byPayId) return byPayId;
+  }
+
+  const gatewayTrack = details.TrackId?.trim();
+  if (gatewayTrack) {
+    return findPurchaseByTrackId(repo, gatewayTrack);
+  }
+
+  return null;
+}
+
+export function cbkMerchantTrackForVerify(
+  details: CbkTransactionDetails,
+  payTrackFromQuery?: string | null,
+): string | null {
+  return (
+    details.PayId?.trim() ??
+    payTrackFromQuery?.trim() ??
+    details.MerchUdf1?.trim() ??
+    null
+  );
 }
 
 export async function validateCbkPaidAmount(

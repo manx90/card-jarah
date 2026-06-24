@@ -186,7 +186,7 @@ export default async function TemplateDetailPage({
               <TemplateDetailActions
                 templateId={template.id}
                 purchased={purchased}
-                isLoggedIn={!!session}
+                isLoggedIn={!!session?.user?.id}
                 cbkEnabled={isCbkPaymentConfigured()}
               />
             </div>

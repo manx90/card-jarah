@@ -27,7 +27,7 @@ const bodySchema = z.object({
   templateId: z.string().uuid(),
 });
 
-const TRACK_LEN = 24;
+const TRACK_LEN = 20;
 const TRACK_CHARS =
   "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
 
@@ -117,6 +117,7 @@ export const POST = withApiHandler("v1.purchases.checkout", async (request: Requ
       paymentTrack: track,
       returnUrl,
       paymentRef: template.title.slice(0, 30),
+      udf1: track,
     });
 
     const actionUrl = buildCbkCheckoutActionUrl(creds, accessToken);
